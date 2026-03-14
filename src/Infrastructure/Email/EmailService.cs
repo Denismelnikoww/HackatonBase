@@ -5,10 +5,11 @@ using MimeKit;
 using MailKit.Net.Smtp;
 using System.Collections.Concurrent;
 using MailKit.Security;
+using Infrastructure.Interfaces;
 
-namespace Infrastructure.Services
+namespace Infrastructure.Email
 {
-    public class EmailService : IDisposable
+    public class EmailService : IDisposable, IEmailService
     {
         private readonly SmtpSettings _settings;
         private readonly ILogger<EmailService> _logger;

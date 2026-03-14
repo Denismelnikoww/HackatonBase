@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Infrastructure.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Org.BouncyCastle.Asn1.Cms.Ecc;
 using Web.Extensions;
+using Web.Middlewares;
 
 namespace Hackaton
 {
@@ -21,26 +22,36 @@ namespace Hackaton
             builder.AddAuth();
 
             builder.AddDb();
+            builder.AddRedis();
 
             builder.Services.AddServices();
-
             builder.Host.UseCustomLogging();
-
-            builder.Services.AddCoreAdmin();
+            builder.AddClaimsPrincipalExtension();
+            builder.Services.AddCoreAdmin(builder.Environment.IsDevelopment() ? string.Empty : "Admin");
 
             var app = builder.Build();
 
-            app.UseSwagger();
-            app.UseSwaggerUI();
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.MapDefaultControllerRoute();
-            app.UseCoreAdminCustomTitle("admin");
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             app.UseAuthorization();
             app.UseAuthentication();
+
+            //if (builder.Environment.IsProduction())
+            //    app.UseMiddleware<SwaggerAccessMiddleware>();
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.MapControllers();
+            app.MapDefaultControllerRoute();
+
+            app.UseCoreAdminCustomTitle("admin");
+
             app.ApplyMigrations();
-            app.UseHangfireDashboard();
+
+            app.UseHangfireDashboard(builder.Environment.IsProduction());
 
             app.Run();
         }

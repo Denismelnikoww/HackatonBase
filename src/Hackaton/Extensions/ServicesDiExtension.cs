@@ -12,8 +12,11 @@ namespace Web.Extensions
         {
             services.AddSingleton<ILoadService, LoadService>();
 
+            services.AddSingleton<IRedisCacheService, RedisCacheService>();
+
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IJwtProvider, JwtProvider>();
+            services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService,UserService>();

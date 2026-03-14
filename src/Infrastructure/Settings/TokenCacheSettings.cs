@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure.Settings
 {
-    public class ResetPasswordTokenSettings
+    public class TokenCacheSettings
     {
         public int TokenExpirationMinutes { get; set; } = 30;
     }

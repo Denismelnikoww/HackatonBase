@@ -4,9 +4,9 @@ namespace Application.Interfaces
 {
     public interface IAuthService
     {
-        Task<JwtTokens> Login(string? login, string password, string? email = null, string? phone = null, CancellationToken ct = default);
+        Task<JwtTokens> Login(string? login, string password, string? email = null, CancellationToken ct = default);
         Task Logout(Guid sessionId, CancellationToken ct = default);
         Task<JwtTokens> Refresh(string refreshToken, Guid userId, Guid sessionId, CancellationToken ct);
-        Task<bool> Register(string login, string password, string? email = null, string? phone = null, CancellationToken ct = default);
+        Task<bool> Register(string name, string login, string password, string? email = null, CancellationToken ct = default);
     }
 }

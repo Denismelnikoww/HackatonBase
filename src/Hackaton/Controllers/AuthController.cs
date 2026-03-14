@@ -4,6 +4,7 @@ using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Web.Extensions;
 
 namespace API.Controllers
 {
@@ -11,9 +12,9 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private IAuthService _authService;
-        private JwtSettings _jwtSettings;
-        private IJwtProvider _jwtProvider;
+        private readonly IAuthService _authService;
+        private readonly JwtSettings _jwtSettings;
+        private readonly IJwtProvider _jwtProvider;
 
         public AuthController(IAuthService authService,
             IOptions<JwtSettings> jwtSettings,
@@ -30,7 +31,6 @@ namespace API.Controllers
             var tokens = await _authService.Login(request.Login,
                 request.Password,
                 request.Email,
-                request.Phone,
                 ct);
 
             Response.Cookies.Append(_jwtSettings.AccessCookieName, tokens.AccessToken, new CookieOptions
@@ -54,14 +54,14 @@ namespace API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
-            Response.Cookies.Delete(_jwtSettings.AccessCookieName);
-            Response.Cookies.Delete(_jwtSettings.RefreshCookieName);
-
             var sessionIdClaim = User.FindFirst(_jwtSettings.SessionCookieName)?.Value;
             if (sessionIdClaim != null)
             {
                 await _authService.Logout(Guid.Parse(sessionIdClaim), ct);
             }
+
+            Response.Cookies.Delete(_jwtSettings.AccessCookieName);
+            Response.Cookies.Delete(_jwtSettings.RefreshCookieName);
 
             return Ok();
         }
@@ -70,10 +70,10 @@ namespace API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
-            var result = await _authService.Register(request.Login,
+            var result = await _authService.Register(request.Name,
+                request.Login,
                 request.Password,
                 request.Email,
-                request.Phone,
                 ct);
             if (result) return Ok();
             return BadRequest(result);
@@ -91,10 +91,11 @@ namespace API.Controllers
             if (principal == null)
                 return Unauthorized();
 
-            var userId = Guid.Parse(principal.FindFirst(_jwtSettings.UserIdCookieName)?.Value);
-            var sessionId = Guid.Parse(principal.FindFirst(_jwtSettings.SessionCookieName)?.Value);
+            var userId = Guid.Parse(principal.GetUserId());
+            var sessionId = Guid.Parse(principal.GetSessionId());
 
             var tokens = await _authService.Refresh(refreshToken, userId, sessionId, ct);
+
             Response.Cookies.Append(_jwtSettings.AccessCookieName, tokens.AccessToken, new CookieOptions
             {
                 IsEssential = true,
@@ -112,18 +113,6 @@ namespace API.Controllers
                 MaxAge = TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays)
             });
 
-            return Ok();
-        }
-
-        [HttpGet("[action]/{email}")]
-        public async Task<IActionResult> ForgotPassword(string email, CancellationToken ct)
-        {
-            return Ok();
-        }
-
-        [HttpPost("[action]")]
-        public async Task<IActionResult> ResetPassword(string email, string token, CancellationToken ct)
-        {
             return Ok();
         }
     }

@@ -2,19 +2,17 @@
 
 namespace API.Contracts.Requests
 {
-    public class RegisterRequest
+    public class ResetPasswordRequest
     {
         [Required]
-        public string Name { get; set; }
+        [EmailAddress]
+        public string Email { get; set; }
 
         [Required]
-        public string Login { get; set; }
+        public string Token { get; set; }
 
         [Required]
         [MinLength(8, ErrorMessage = "Пароль должен быть не короче 8 символов")]
         public string Password { get; set; }
-
-        [EmailAddress]
-        public string? Email { get; set; }
     }
 }

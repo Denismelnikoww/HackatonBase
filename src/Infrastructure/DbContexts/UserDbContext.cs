@@ -11,7 +11,6 @@ namespace Infrastructure.DbContexts
         public DbSet<User> Users { get; set; }
         public DbSet<Session> UserSessions { get; set; }
         public DbSet<Token> UserTokens { get; set; }
-        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -50,14 +49,7 @@ namespace Infrastructure.DbContexts
                     .HasMaxLength(100)
                     .HasColumnType("varchar(100)");
 
-                builder.Property(x => x.Phone)
-                    .HasMaxLength(20)
-                    .HasColumnType("varchar(20)");
-
                 builder.Property(x => x.IsEmailConfirmed)
-                    .HasDefaultValue(false);
-
-                builder.Property(x => x.IsPhoneConfirmed)
                     .HasDefaultValue(false);
 
                 builder.Property(x => x.IsDeleted)
@@ -82,11 +74,6 @@ namespace Infrastructure.DbContexts
                     .IsUnique()
                     .HasDatabaseName("IX_Users_Email")
                     .HasFilter("\"Email\" IS NOT NULL");
-
-                builder.HasIndex(x => x.Phone)
-                    .IsUnique()
-                    .HasDatabaseName("IX_Users_Phone")
-                    .HasFilter("\"Phone\" IS NOT NULL");
 
                 builder.HasIndex(x => new { x.IsDeleted, x.IsBanned })
                     .HasDatabaseName("IX_Users_Status");

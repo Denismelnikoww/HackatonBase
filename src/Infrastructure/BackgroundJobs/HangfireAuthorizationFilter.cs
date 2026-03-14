@@ -1,4 +1,5 @@
-﻿using Hangfire.Dashboard;
+﻿using Domain.Models.User;
+using Hangfire.Dashboard;
 
 namespace Infrastructure.BackgroundJobs
 {
@@ -7,14 +8,13 @@ namespace Infrastructure.BackgroundJobs
     {
         public bool Authorize(DashboardContext context)
         {
-            return true;
 
             var httpContext = context.GetHttpContext();
 
             if (httpContext.User?.Identity?.IsAuthenticated != true)
                 return false;
 
-            if (httpContext.User.IsInRole("Admin") || httpContext.User.IsInRole("HangfireAccess"))
+            if (httpContext.User.IsInRole(Role.Admin.ToString()))
                 return true;
 
             return false;

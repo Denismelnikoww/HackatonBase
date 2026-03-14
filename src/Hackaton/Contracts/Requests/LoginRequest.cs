@@ -13,8 +13,5 @@ namespace API.Contracts.Requests
 
         [EmailAddress]
         public string? Email { get; set; }
-
-        [Phone]
-        public string? Phone { get; set; }
     }
 }

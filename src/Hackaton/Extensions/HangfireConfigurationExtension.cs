@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Infrastructure.BackgroundJobs;
 
@@ -20,14 +21,16 @@ namespace Web.Extensions
             return builder;
         }
 
-        public static IApplicationBuilder UseHangfireDashboard(
-            this IApplicationBuilder app)
+        public static IApplicationBuilder UseHangfireDashboard(this IApplicationBuilder app,
+            bool useAuthorization = false)
         {
             var options = new DashboardOptions
             {
                 DashboardTitle = "Jobs Dashboard",
                 DarkModeEnabled = true,
-                Authorization = new[] { new HangfireAuthorizationFilter() }
+                Authorization = useAuthorization
+                    ? new[] { new HangfireAuthorizationFilter() }
+                    : Array.Empty<IDashboardAuthorizationFilter>()
             };
 
             app.UseHangfireDashboard("/jobs", options);

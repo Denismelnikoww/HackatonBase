@@ -7,14 +7,14 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class HealthController : ControllerBase
     {
-        private ILoadService _loadService;
+        private readonly ILoadService _loadService;
         public HealthController(ILoadService loadService)
         {
             _loadService = loadService;
         }
 
         [HttpGet("[action]")]
-        public async  Task<IActionResult> Live()
+        public async Task<IActionResult> Live()
         {
             return Ok(DateTime.UtcNow);
         }

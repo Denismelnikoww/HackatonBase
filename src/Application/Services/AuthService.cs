@@ -2,7 +2,6 @@
 using Application.Interfaces;
 using Domain.Models.User;
 using Infrastructure.DbContexts;
-using Infrastructure.Extensions;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Security;
@@ -31,28 +30,27 @@ namespace Application.Services
         }
 
         public async Task<bool> Register(
+            string name,
             string login,
             string password,
             string? email = null,
-            string? phone = null,
             CancellationToken ct = default)
         {
             email = email?.ToLower() ?? string.Empty;
-            phone ??= string.Empty;
 
             var user = await _users.AsNoTracking()
-                .FirstOrDefaultAsync(u => (u.Login == login.ToLower()) ||
-                u.Email == email || u.Phone == phone, ct);
+                .FirstOrDefaultAsync(u => (u.Login == login.ToLower())
+                    || u.Email == email, ct);
 
             if (user != null)
                 return false;
 
             var newUser = new User
             {
+                Name = name,
                 Login = login,
                 PasswordHash = _passwordHasher.Hash(password),
             };
-            newUser.ChangePhone(phone);
             newUser.ChangeEmail(email);
 
             await _users.AddAsync(newUser, ct);
@@ -63,21 +61,16 @@ namespace Application.Services
         public async Task<JwtTokens> Login(string? login,
             string password,
             string? email = null,
-            string? phone = null,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(login)
-                && string.IsNullOrWhiteSpace(email)
-                && string.IsNullOrWhiteSpace(phone))
-                throw new ArgumentException("At least one identifier (login, email, or phone) must be provided");
+            if (string.IsNullOrWhiteSpace(login) && string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("At least one identifier (login or email) must be provided");
 
             login ??= string.Empty;
             email ??= string.Empty;
-            phone ??= string.Empty;
 
-            var user = await _users.FirstOrDefaultAsync(u => (u.Login == login.ToLower()) ||
-                (u.IsEmailConfirmed && u.Email == email.ToLower()) ||
-                (u.IsPhoneConfirmed && u.Phone == phone), ct);
+            var user = await _users.FirstOrDefaultAsync(u => (u.Login == login.ToLower())
+                || (u.IsEmailConfirmed && u.Email == email.ToLower()), ct);
 
             if (user == null)
                 throw new Exception("User not found");
