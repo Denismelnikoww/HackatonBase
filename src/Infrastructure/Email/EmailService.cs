@@ -9,22 +9,18 @@ using Infrastructure.Interfaces;
 
 namespace Infrastructure.Email
 {
-    public class EmailService : IDisposable, IEmailService
+    public class EmailService(
+        IOptions<SmtpOptions> options,
+        ILogger<EmailService> logger) : IDisposable, IEmailService
     {
-        private readonly SmtpOptions _options;
-        private readonly ILogger<EmailService> _logger;
+        private readonly SmtpOptions _options = options.Value;
         private readonly ConcurrentBag<SmtpClient> _clientPool = new();
-        private readonly SemaphoreSlim _semaphore;
+        private readonly SemaphoreSlim _semaphore =
+            new SemaphoreSlim(options.Value.MaxConcurrentConnections);
 
         private int _activeClients = 0;
         private bool _disposed;
 
-        public EmailService(IOptions<SmtpOptions> options, ILogger<EmailService> logger)
-        {
-            _options = options.Value;
-            _logger = logger;
-            _semaphore = new SemaphoreSlim(_options.MaxConcurrentConnections);
-        }
 
         public async Task SendAsync(string email, string subject, string text, CancellationToken ct = default)
         {
@@ -43,7 +39,7 @@ namespace Infrastructure.Email
                 {
                     attempt++;
 
-                    _logger.LogWarning(ex,
+                    logger.LogWarning(ex,
                         "Failed to send email to {Email}, attempt {Attempt}/{MaxAttempts}. Retrying in {Delay}s",
                         email, attempt, maxAttempts, delay);
 
@@ -72,7 +68,7 @@ namespace Infrastructure.Email
                 {
                     if (!client.IsConnected || client.IsAuthenticated == false)
                     {
-                        _logger.LogDebug("Reconnecting stale client");
+                        logger.LogDebug("Reconnecting stale client");
                         await ReconnectClientAsync(client, ct);
                     }
                 }
@@ -88,13 +84,13 @@ namespace Infrastructure.Email
                 _clientPool.Add(client);
                 client = null;
 
-                _logger.LogDebug("Email sent to {Email}", email);
+                logger.LogDebug("Email sent to {Email}", email);
             }
             catch (Exception ex)
             {
                 if (IsConnectionError(ex))
                 {
-                    _logger.LogWarning(ex, "Connection error, client will be disposed");
+                    logger.LogWarning(ex, "Connection error, client will be disposed");
                     client?.Dispose();
                     client = null;
                 }
@@ -194,7 +190,7 @@ namespace Infrastructure.Email
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Error disposing SMTP client");
+                    logger.LogWarning(ex, "Error disposing SMTP client");
                 }
             }
 

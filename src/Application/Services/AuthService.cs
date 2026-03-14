@@ -4,32 +4,18 @@ using Domain.Models.User;
 using Infrastructure.DbContexts;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Security;
+using ResultSharp.Core;
+using ResultSharp.Errors;
+using ResultSharp.Errors.Enums;
 
 namespace Application.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService(
+        UserDbContext context,
+        IJwtProvider jwtProvider,
+        IPasswordHasher passwordHasher) : IAuthService
     {
-        private readonly UserDbContext _context;
-        private readonly DbSet<User> _users;
-        private readonly DbSet<Session> _sessions;
-        private readonly DbSet<Token> _tokens;
-
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IJwtProvider _jwtProvider;
-
-        public AuthService(UserDbContext context, IJwtProvider jwtProvider, IPasswordHasher passwordHasher)
-        {
-            _context = context;
-            _users = _context.Set<User>();
-            _sessions = _context.Set<Session>();
-            _tokens = _context.Set<Token>();
-
-            _passwordHasher = passwordHasher;
-            _jwtProvider = jwtProvider;
-        }
-
-        public async Task<bool> Register(
+        public async Task<Result> Register(
             string name,
             string login,
             string password,
@@ -38,45 +24,45 @@ namespace Application.Services
         {
             email = email?.ToLower() ?? string.Empty;
 
-            var user = await _users.AsNoTracking()
+            var user = await context.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => (u.Login == login.ToLower())
                     || u.Email == email, ct);
 
             if (user != null)
-                return false;
+                return Error.Conflict("Пользователь с таким логином и/или почтой уже существует");
 
             var newUser = new User
             {
                 Name = name,
                 Login = login,
-                PasswordHash = _passwordHasher.Hash(password),
+                PasswordHash = passwordHasher.Hash(password),
             };
             newUser.ChangeEmail(email);
 
-            await _users.AddAsync(newUser, ct);
-            await _context.SaveChangesAsync(ct);
-            return true;
+            await context.Users.AddAsync(newUser, ct);
+            await context.SaveChangesAsync(ct);
+            return Result.Success();
         }
 
-        public async Task<JwtTokens> Login(string? login,
+        public async Task<Result<JwtTokens>> Login(string? login,
             string password,
             string? email = null,
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(login) && string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("At least one identifier (login or email) must be provided");
+                return Error.BadRequest("Нужен хотя бы один идентификатор (email или логин)");
 
             login ??= string.Empty;
             email ??= string.Empty;
 
-            var user = await _users.FirstOrDefaultAsync(u => (u.Login == login.ToLower())
+            var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login.ToLower())
                 || (u.IsEmailConfirmed && u.Email == email.ToLower()), ct);
 
             if (user == null)
-                throw new Exception("User not found");
+                return Error.NotFound("Такого пользователя не существует");
 
-            if (!_passwordHasher.Verify(password, user.PasswordHash))
-                throw new Exception("Invalid password");
+            if (!passwordHasher.Verify(password, user.PasswordHash))
+                return Error.BadRequest("Неверный пароль");
 
             var session = new Session
             {
@@ -90,84 +76,92 @@ namespace Application.Services
 
             var tokens = new JwtTokens
             {
-                AccessToken = _jwtProvider.GenerateAccessToken(user.Id, session.Id, user.Role),
-                RefreshToken = _jwtProvider.GenerateRefreshToken(user.Id, session.Id)
+                AccessToken = jwtProvider.GenerateAccessToken(user.Id, session.Id, user.Role),
+                RefreshToken = jwtProvider.GenerateRefreshToken(user.Id, session.Id)
             };
 
             token.RefreshToken = tokens.RefreshToken;
 
             session.Token = token;
 
-            await _sessions.AddAsync(session, ct);
-            await _tokens.AddAsync(token, ct);
+            await context.UserSessions.AddAsync(session, ct);
+            await context.UserTokens.AddAsync(token, ct);
 
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
 
             return tokens;
         }
 
-        public async Task Logout(Guid sessionId,
+        public async Task<Result> Logout(Guid sessionId,
             CancellationToken ct = default)
         {
-            var session = await _sessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
+            var session = await context.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
             if (session == null)
-                return;
+                return Error.NotFound("Такой сесиии не существует");
 
             session.IsActive = false;
             session.LastActivity = DateTime.UtcNow;
             session.LogoutDate = DateTime.UtcNow;
-            await _context.SaveChangesAsync(ct);
+            await context.SaveChangesAsync(ct);
+
+            return Result.Success();
         }
 
-        public async Task<JwtTokens> Refresh(string refreshToken,
+        public async Task<Result<JwtTokens>> Refresh(string refreshToken,
             Guid userId,
             Guid sessionId,
             CancellationToken ct)
         {
-            var user = await _users.AsNoTracking()
+            var user = await context.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
-            if (user == null || user.IsDeleted || user.IsBanned)
-                throw new Exception();
+            if (user == null)
+                return Error.NotFound("Такого пользователя не существует");
 
-            var session = await _sessions
+            if (user.IsDeleted || user.IsBanned)
+                return Error.BadRequest("Пользователь удален или заблокирован");
+
+            var session = await context.UserSessions
                 .Include(s => s.Token)
                 .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
             if (session == null)
-                throw new SecurityException("Session not found");
+                return Error.NotFound("Такой сессии не существует");
 
             if (session.Token?.RefreshToken != refreshToken)
             {
                 session.IsActive = false;
-                await _context.SaveChangesAsync(ct);
-                throw new SecurityException("Token reuse detected");
+                await context.SaveChangesAsync(ct);
+                return new Error("Обнаружена подмена токена :)", ErrorCode.ImATeapot);
             }
 
-            if (session.UserId != userId || session.User.IsBanned || !session.IsActive)
-                throw new SecurityException("Invalid session");
+            if (session.User.IsBanned)
+                return Error.BadRequest("Пользователь заблокирован");
+
+            if (!session.IsActive)
+                return Error.BadRequest("Данная сессия не активна");
 
             session.Token.IsRevoked = true;
 
             var newToken = new Token
             {
                 SessionId = sessionId,
-                RefreshToken = _jwtProvider.GenerateRefreshToken(userId, sessionId)
+                RefreshToken = jwtProvider.GenerateRefreshToken(userId, sessionId)
             };
 
             var tokens = new JwtTokens
             {
-                AccessToken = _jwtProvider.GenerateAccessToken(userId, sessionId, user.Role),
+                AccessToken = jwtProvider.GenerateAccessToken(userId, sessionId, user.Role),
                 RefreshToken = newToken.RefreshToken
             };
 
             session.TokenId = newToken.Id;
             session.LastActivity = DateTime.UtcNow;
 
-            await _tokens.AddAsync(newToken, ct);
-            await _context.SaveChangesAsync(ct);
+            await context.UserTokens.AddAsync(newToken, ct);
+            await context.SaveChangesAsync(ct);
             return tokens;
         }
     }

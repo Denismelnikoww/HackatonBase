@@ -4,34 +4,31 @@ using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class AuthController(IAuthService authService,
+        IOptions<JwtOptions> options,
+        IJwtProvider jwtProvider) : ControllerBase
     {
-        private readonly IAuthService _authService;
-        private readonly JwtOptions _options;
-        private readonly IJwtProvider _jwtProvider;
-
-        public AuthController(IAuthService authService,
-            IOptions<JwtOptions> options,
-            IJwtProvider jwtProvider)
-        {
-            _jwtProvider = jwtProvider;
-            _authService = authService;
-            _options = options.Value;
-        }
+        private readonly JwtOptions _options = options.Value;
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
         {
-            var tokens = await _authService.Login(request.Login,
+            var result = await authService.Login(request.Login,
                 request.Password,
                 request.Email,
                 ct);
+
+            if (result.IsFailure)
+                return result.ToResponse();
+
+            var tokens = result.Value;
 
             Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
             {
@@ -55,28 +52,28 @@ namespace API.Controllers
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
             var sessionIdClaim = User.FindFirst(_options.SessionCookieName)?.Value;
-            if (sessionIdClaim != null)
-            {
-                await _authService.Logout(Guid.Parse(sessionIdClaim), ct);
-            }
+            if (sessionIdClaim == null)
+                return BadRequest();
+
+            var result = await authService.Logout(Guid.Parse(sessionIdClaim), ct);
 
             Response.Cookies.Delete(_options.AccessCookieName);
             Response.Cookies.Delete(_options.RefreshCookieName);
 
-            return Ok();
+            return result.ToResponse();
         }
 
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
-            var result = await _authService.Register(request.Name,
+            var result = await authService.Register(request.Name,
                 request.Login,
                 request.Password,
                 request.Email,
                 ct);
-            if (result) return Ok();
-            return BadRequest(result);
+
+            return result.ToResponse();
         }
 
         [HttpPost("[action]")]
@@ -87,14 +84,18 @@ namespace API.Controllers
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized();
 
-            var principal = _jwtProvider.ValidateRefreshToken(refreshToken);
+            var principal = jwtProvider.ValidateRefreshToken(refreshToken);
             if (principal == null)
                 return Unauthorized();
 
-            var userId = Guid.Parse(principal.GetUserId());
-            var sessionId = Guid.Parse(principal.GetSessionId());
+            var userId = principal.GetUserId();
+            var sessionId = principal.GetSessionId();
 
-            var tokens = await _authService.Refresh(refreshToken, userId, sessionId, ct);
+            var result = await authService.Refresh(refreshToken, userId, sessionId, ct);
+            if (result.IsFailure)
+                return result.ToResponse();
+
+            var tokens = result.Value;
 
             Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
             {

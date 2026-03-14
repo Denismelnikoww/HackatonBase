@@ -17,14 +17,14 @@ namespace Web.Extensions
             return builder;
         }
 
-        public static string GetUserId(this ClaimsPrincipal user)
+        public static Guid GetUserId(this ClaimsPrincipal user)
         {
-            return user.FindFirstValue(_jwtOptions.UserIdCookieName);
+            return Guid.Parse(user.FindFirstValue(_jwtOptions.UserIdCookieName));
         }
 
-        public static string GetSessionId(this ClaimsPrincipal user)
+        public static Guid GetSessionId(this ClaimsPrincipal user)
         {
-            return user.FindFirstValue(_jwtOptions.SessionCookieName);
+            return Guid.Parse(user.FindFirstValue(_jwtOptions.SessionCookieName));
         }
     }
 }

@@ -1,4 +1,6 @@
 using Infrastructure.Extensions;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 using Web.Extensions;
 using Web.Middlewares;
 
@@ -24,6 +26,23 @@ namespace Hackaton
             builder.AddDb();
             builder.AddRedis();
 
+            builder.Services.AddXmlCommentsToSwagger();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin",
+                    policy =>
+                    {
+                        policy.WithOrigins("https://localhost:7225/swagger/index.html")
+                              .AllowCredentials()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
+
+            // После builder.Build()
+
+
             builder.Services.AddServices();
             builder.Host.UseCustomLogging();
             builder.AddClaimsPrincipalExtension();
@@ -33,8 +52,10 @@ namespace Hackaton
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-            app.UseAuthorization();
+            app.UseCors("AllowSpecificOrigin");
+
             app.UseAuthentication();
+            app.UseAuthorization();
 
             //if (builder.Environment.IsProduction())
             //    app.UseMiddleware<SwaggerAccessMiddleware>();

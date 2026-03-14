@@ -1,57 +1,64 @@
-﻿using Domain.Models.User;
-using Infrastructure.DbContexts;
+﻿using Infrastructure.DbContexts;
 using Infrastructure.Interfaces;
+using Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
+using ResultSharp.Core;
+using ResultSharp.Errors;
+using ResultSharp.Errors.Enums;
 
 namespace Application.Services
 {
-    //public class ResetPasswordService : IResetPasswordService
-    //{
-    //    private readonly IVerificationCacheProvider _cacheProvider;
-    //    private readonly IEmailService _emailService;
-    //    private readonly IEmailTemplateBuilder _emailTemplateBuilder;
-    //    private readonly IPasswordHasher _passwordHasher;
-    //    private readonly UserDbContext _context;
-    //    private readonly DbSet<User> _users;
+    public class ResetPasswordService(IRedisCacheService redisCacheService,
+        IOptions<VerificationCacheOptions> options,
+        IEmailTemplateBuilder emailTemplateBuilder,
+        IPasswordHasher passwordHasher,
+        IEmailService emailService,
+        UserDbContext context) : IResetPasswordService
+    {
+        private readonly VerificationCacheOptions _options = options.Value;
 
-    //    public ResetPasswordService(IEmailTemplateBuilder emailTemplateBuilder,
-    //        IPasswordHasher passwordHasher,
-    //        IVerificationCacheProvider cacheProvider,
-    //        IEmailService emailService,
-    //        UserDbContext context)
-    //    {
-    //        _emailTemplateBuilder = emailTemplateBuilder;
-    //        _passwordHasher = passwordHasher;
-    //        _context = context;
-    //        _cacheProvider = cacheProvider;
-    //        _emailService = emailService;
-    //    }
+        public async Task<Result> SendLink(string email, CancellationToken ct)
+        {
+            // TODO: на проде изменить что почта подтверждена
+            var user = await context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-        //public async Task SendLink(string email, CancellationToken ct)
-        //{
-        //    var user = await _users.AsNoTracking()
-        //        .FirstOrDefaultAsync(x => x.Email == email);
+            if (user == null)
+                return Error.NotFound("Такого пользователя не существует");
 
-        //    if (user == null)
-        //        throw new Exception();
+            var emailId = Guid.NewGuid().ToString();
+            var link = $"https://{emailId}";
 
-        //    _cacheProvider.GenerateToken()
-        //    var html = "";
+            await redisCacheService.SetAsync(emailId, email,
+                TimeSpan.FromMinutes(_options.EmailExpirationMinutes));
 
-        //    await _emailService.SendAsync(email, "Смена пароля", html, ct);
-        //}
+            var html = emailTemplateBuilder.BuildResetPasswordEmail(link, _options.EmailExpirationMinutes);
 
-        //public async Task ResetPassword(string email, string token,
-        //    string password, CancellationToken ct)
-        //{
-        //    if (await _tokensProvider.VerifyPasswordResetToken(email, token, ct))
-        //        throw new Exception();
+            await emailService.SendAsync(email, "Смена пароля", html, ct);
 
-        //    var user = await _users.FirstOrDefaultAsync(u => u.Email == email);
-        //    user.PasswordHash = _passwordHasher.Hash(password);
-        //    await _context.SaveChangesAsync();
-        //    await _emailService.SendAsync(email, "Пароль успешно сброшен", "текст", ct);
-        //}
-    //}
+            return Result.Success();
+        }
+
+        public async Task<Result> ResetPassword(string emailId, string password, CancellationToken ct)
+        {
+            var email = await redisCacheService.GetAsync<string>(emailId);
+
+            if (email == null)
+                return new Error("А вот и не получилось поменять чужой пароль :)", ErrorCode.ImATeapot);
+
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+                return Error.NotFound("Такого пользователя не существует");
+
+            user.PasswordHash = passwordHasher.Hash(password);
+            if (!user.IsEmailConfirmed)
+                user.ConfirmEmail();
+
+            await context.SaveChangesAsync();
+
+            return Result.Success();
+        }
+    }
 }

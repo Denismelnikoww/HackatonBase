@@ -1,41 +1,43 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
-using Domain.Models.User;
 using Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
+using ResultSharp.Core;
+using ResultSharp.Errors;
 
 namespace Application.Services
 {
-    public class UserService : IUserService
+    public class UserService(UserDbContext context) : IUserService
     {
-        private readonly UserDbContext _context;
-        private readonly DbSet<Session> _session;
-        private readonly DbSet<User> _users;
-
-        public UserService(UserDbContext context)
+        public async Task<Result> UpdateActivity(Guid sessionId, CancellationToken ct = default)
         {
-            _context = context;
-            _session = _context.Set<Session>();
-        }
+            var session = await context.UserSessions
+                .FirstOrDefaultAsync(x => x.Id == sessionId, ct);
 
-        public async Task UpdateActivity(Guid sessionId)
-        {
-            var session = await _session.FirstOrDefaultAsync(x => x.Id == sessionId);
             if (session == null)
-                return;
+                return Error.NotFound("Такой сессии не существует");
+
             session.LastActivity = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+
+            return Result.Success();
         }
 
-        public async Task<UserInfo?> GetInfo(Guid userId, CancellationToken ct = default)
+        public async Task<Result<UserInfo?>> GetInfo(Guid userId, CancellationToken ct = default)
         {
-            return await _users.AsNoTracking()
+            var userInfo = await context.Users.AsNoTracking()
+                .Where(u => u.Id == userId)
                 .Select(u => new UserInfo
                 {
                     Name = u.Name,
                     Role = u.Role
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
+
+            if (userInfo == null)
+                return Error.NotFound("Такого пользователя не существует");
+
+            return userInfo;
         }
     }
 }

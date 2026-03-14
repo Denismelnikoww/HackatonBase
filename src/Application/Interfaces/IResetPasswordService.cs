@@ -1,8 +1,10 @@
-﻿namespace Infrastructure.Interfaces
+﻿using ResultSharp.Core;
+
+namespace Infrastructure.Interfaces
 {
     public interface IResetPasswordService
     {
-        Task ResetPassword(string email, string token, string password, CancellationToken ct);
-        Task SendLink(string email, CancellationToken ct);
+        Task<Result> ResetPassword(string email, string password, CancellationToken ct);
+        Task<Result> SendLink(string email, CancellationToken ct);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces;
 using Application.Services;
 using Infrastructure.Auth;
+using Infrastructure.Email;
 using Infrastructure.Interfaces;
 using Infrastructure.Services;
 
@@ -16,8 +17,11 @@ namespace Web.Extensions
 
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IJwtProvider, JwtProvider>();
-            //services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
+            services.AddScoped<IEmailTemplateBuilder, EmailTemplateBuilder>();
+            services.AddScoped<IEmailService, EmailService>();
+
+            services.AddScoped<IResetPasswordService, ResetPasswordService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService,UserService>();
 
