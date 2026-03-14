@@ -1,4 +1,5 @@
-﻿using Infrastructure.Settings;
+﻿using Infrastructure.Interfaces;
+using Infrastructure.Options;
 using Microsoft.Extensions.Options;
 using System.Text;
 
@@ -6,21 +7,21 @@ namespace Infrastructure.Email
 {
     public partial class EmailTemplateBuilder : IEmailTemplateBuilder
     {
-        private readonly EmailTemplateSettings _settings;
+        private readonly EmailTemplateOptions _options;
         private string _cachedTemplate;
 
-        public EmailTemplateBuilder(IOptions<EmailTemplateSettings> settings)
+        public EmailTemplateBuilder(IOptions<EmailTemplateOptions> options)
         {
-            _settings = settings.Value;
+            _options = options.Value;
         }
 
         public EmailData LoadEmailData(EmailType emailType, string link, int expiryTime = 30)
         {
             var typeStr = emailType.ToString();
 
-            var titlePath = Path.Combine(_settings.RecourcesPath, $"TITLE-{typeStr}.txt");
-            var descriptionPath = Path.Combine(_settings.RecourcesPath, $"DESCRIPTION-{typeStr}.txt");
-            var buttonPath = Path.Combine(_settings.RecourcesPath, $"BUTTON-{typeStr}.txt");
+            var titlePath = Path.Combine(_options.ResourcesPath, $"TITLE-{typeStr}.txt");
+            var descriptionPath = Path.Combine(_options.ResourcesPath, $"DESCRIPTION-{typeStr}.txt");
+            var buttonPath = Path.Combine(_options.ResourcesPath, $"BUTTON-{typeStr}.txt");
 
             string title = File.ReadAllText(titlePath, Encoding.UTF8).Trim();
             string description = File.ReadAllText(descriptionPath, Encoding.UTF8).Trim();

@@ -2,17 +2,21 @@
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Infrastructure.BackgroundJobs;
+using Infrastructure.Options;
+using Microsoft.Extensions.Options;
 
 namespace Web.Extensions
 {
     public static class HangfireConfigurationExtension
     {
         public static IHostApplicationBuilder AddHangfire(
-    this IHostApplicationBuilder builder)
+            this IHostApplicationBuilder builder)
         {
+            var connectionString = builder.Services.BuildServiceProvider()
+             .GetRequiredService<IOptions<ConnectionStringsOptions>>().Value;
+
             builder.Services.AddHangfire(config =>
-                config.UsePostgreSqlStorage(
-                    builder.Configuration.GetDbConnectionString()));
+                config.UsePostgreSqlStorage(connectionString.DatabaseConnectionString));
 
             builder.Services.AddHangfireServer();
 

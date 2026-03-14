@@ -7,24 +7,24 @@ namespace Web.Extensions
 {
     public static class ClaimsPrincipalExtension
     {
-        private static JwtSettings _jwtSettings = null!;
+        private static JwtOptions _jwtOptions = null!;
 
         public static IHostApplicationBuilder AddClaimsPrincipalExtension(this IHostApplicationBuilder builder)
         {
-            _jwtSettings = builder.Services.BuildServiceProvider()
-                .GetRequiredService<IOptions<JwtSettings>>().Value;
+            _jwtOptions = builder.Services.BuildServiceProvider()
+                .GetRequiredService<IOptions<JwtOptions>>().Value;
 
             return builder;
         }
 
         public static string GetUserId(this ClaimsPrincipal user)
         {
-            return user.FindFirstValue(_jwtSettings.UserIdCookieName);
+            return user.FindFirstValue(_jwtOptions.UserIdCookieName);
         }
 
         public static string GetSessionId(this ClaimsPrincipal user)
         {
-            return user.FindFirstValue(_jwtSettings.SessionCookieName);
+            return user.FindFirstValue(_jwtOptions.SessionCookieName);
         }
     }
 }

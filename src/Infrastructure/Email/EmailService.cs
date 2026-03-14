@@ -1,4 +1,4 @@
-﻿using Infrastructure.Settings;
+﻿using Infrastructure.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -11,7 +11,7 @@ namespace Infrastructure.Email
 {
     public class EmailService : IDisposable, IEmailService
     {
-        private readonly SmtpSettings _settings;
+        private readonly SmtpOptions _options;
         private readonly ILogger<EmailService> _logger;
         private readonly ConcurrentBag<SmtpClient> _clientPool = new();
         private readonly SemaphoreSlim _semaphore;
@@ -19,18 +19,18 @@ namespace Infrastructure.Email
         private int _activeClients = 0;
         private bool _disposed;
 
-        public EmailService(IOptions<SmtpSettings> settings, ILogger<EmailService> logger)
+        public EmailService(IOptions<SmtpOptions> options, ILogger<EmailService> logger)
         {
-            _settings = settings.Value;
+            _options = options.Value;
             _logger = logger;
-            _semaphore = new SemaphoreSlim(_settings.MaxConcurrentConnections);
+            _semaphore = new SemaphoreSlim(_options.MaxConcurrentConnections);
         }
 
         public async Task SendAsync(string email, string subject, string text, CancellationToken ct = default)
         {
             var attempt = 0;
-            var maxAttempts = _settings.MaxRetryAttempts;
-            var delay = _settings.RetryDelaySeconds;
+            var maxAttempts = _options.MaxRetryAttempts;
+            var delay = _options.RetryDelaySeconds;
 
             while (attempt < maxAttempts)
             {
@@ -78,7 +78,7 @@ namespace Infrastructure.Email
                 }
 
                 using var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(_settings.Name, _settings.Email));
+                message.From.Add(new MailboxAddress(_options.Name, _options.Email));
                 message.To.Add(new MailboxAddress("", email));
                 message.Subject = subject;
                 message.Body = new TextPart("html") { Text = text };
@@ -158,17 +158,17 @@ namespace Infrastructure.Email
 
         private async Task ConnectAndAuthClientAsync(SmtpClient client, CancellationToken ct)
         {
-            client.Timeout = _settings.TimeoutSeconds * 1000;
+            client.Timeout = _options.TimeoutSeconds * 1000;
 
             await client.ConnectAsync(
-                _settings.Host,
-                _settings.Port,
-                _settings.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls,
+                _options.Host,
+                _options.Port,
+                _options.UseSsl ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls,
                 ct);
 
             await client.AuthenticateAsync(
-                _settings.Email,
-                _settings.Password,
+                _options.Email,
+                _options.Password,
                 ct);
         }
 

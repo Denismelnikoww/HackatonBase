@@ -1,7 +1,5 @@
 ﻿using Infrastructure.Options;
-using Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Infrastructure.Extensions
@@ -20,9 +18,9 @@ namespace Infrastructure.Extensions
             this DbContext dbContext,
             Func<Task<T>> action,
             CancellationToken cancellationToken = default,
-            Action<TransactionSettings>? configureOptions = default)
+            Action<TransactionOptions>? configureOptions = default)
         {
-            var options = new TransactionSettings();
+            var options = new TransactionOptions();
             configureOptions?.Invoke(options);
 
             var strategy = dbContext.Database.CreateExecutionStrategy();
@@ -75,9 +73,9 @@ namespace Infrastructure.Extensions
             this DbContext dbContext,
             Func<Task> action,
             CancellationToken cancellationToken = default,
-            Action<TransactionSettings>? configureOptions = default)
+            Action<TransactionOptions>? configureOptions = default)
         {
-            var options = new TransactionSettings();
+            var options = new TransactionOptions();
             configureOptions?.Invoke(options);
 
             var strategy = dbContext.Database.CreateExecutionStrategy();
@@ -132,7 +130,7 @@ namespace Infrastructure.Extensions
         /// <param name="retryCount">Количество попыток</param>
         /// <param name="options">Настройки транзакции</param>
         /// <returns>Задержка в мс</returns>
-        private static TimeSpan CalculateRetryDelay(int retryCount, TransactionSettings options)
+        private static TimeSpan CalculateRetryDelay(int retryCount, TransactionOptions options)
         {
             if (options.UseExponentialBackoff)
             {

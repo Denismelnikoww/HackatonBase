@@ -1,6 +1,6 @@
 ﻿namespace Infrastructure.Options
 {
-    public class JwtSettings
+    public class JwtOptions
     {
         public string AccessCookieName { get; set; } = string.Empty;
         public string RefreshCookieName { get; set; } = string.Empty;

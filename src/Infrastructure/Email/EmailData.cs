@@ -11,8 +11,5 @@
             public string ButtonText { get; set; }
             public int ExpiryTime { get; set; } = 24;
         }
-
-        #endregion
     }
-}
 }

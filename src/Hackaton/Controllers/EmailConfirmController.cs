@@ -11,23 +11,23 @@ namespace Web.Controllers
     public class EmailConfirmController : ControllerBase
     {
 
-        public EmailConfirmController(IOptions<JwtSettings> settings)
-        {
+        //public EmailConfirmController(IOptions<JwtOptions> options)
+        //{
 
-        }
+        //}
 
-        [HttpGet]
-        public async Task<IActionResult> SendLink()
-        {
-            var userId = User.GetUserId();
+        //[HttpGet]
+        //public async Task<IActionResult> SendLink()
+        //{
+        //    var userId = User.GetUserId();
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
 
-        [HttpPost]
-        public async Task<IActionResult> Validate()
-        {
+        //[HttpPost]
+        //public async Task<IActionResult> Validate()
+        //{
 
-        }
+        //}
     }
 }

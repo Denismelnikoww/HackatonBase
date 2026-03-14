@@ -1,6 +1,4 @@
 using Infrastructure.Extensions;
-using Microsoft.Extensions.Logging.Abstractions;
-using Org.BouncyCastle.Asn1.Cms.Ecc;
 using Web.Extensions;
 using Web.Middlewares;
 
@@ -13,6 +11,8 @@ namespace Hackaton
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
             builder.Configuration.AddKeyPerFile("/run/secrets", optional: true);
+            builder.AddOptions();
+            builder.ValidateOptions();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();

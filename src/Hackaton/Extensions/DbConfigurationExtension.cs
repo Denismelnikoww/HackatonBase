@@ -1,5 +1,7 @@
 ﻿using Infrastructure.DbContexts;
+using Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Web.Extensions
 {
@@ -7,9 +9,12 @@ namespace Web.Extensions
     {
         public static IHostApplicationBuilder AddDb(this IHostApplicationBuilder builder)
         {
+            var connectionString = builder.Services.BuildServiceProvider()
+              .GetRequiredService<IOptions<ConnectionStringsOptions>>().Value;
+
             builder.Services.AddDbContext<UserDbContext>(options =>
                  options.UseNpgsql(
-                   builder.Configuration.GetDbConnectionString(),
+                   connectionString.DatabaseConnectionString,
                      npgsqlOptions =>
                      {
                          npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "users");
@@ -17,25 +22,6 @@ namespace Web.Extensions
                      }
              ));
             return builder;
-        }
-
-        public static string GetDbConnectionString(this IConfiguration configuration)
-        {
-            var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ??
-               configuration["DB_PASSWORD"];
-
-            if (string.IsNullOrEmpty(dbPassword))
-            {
-                throw new InvalidOperationException("DB_PASSWORD not configured");
-            }
-
-            var connectionStringTemplate = configuration.GetConnectionString("Database");
-            if (string.IsNullOrEmpty(connectionStringTemplate))
-            {
-                throw new InvalidOperationException("Database connection string not configured");
-            }
-
-            return string.Format(connectionStringTemplate, dbPassword);
         }
     }
 }

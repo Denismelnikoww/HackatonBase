@@ -1,4 +1,6 @@
-﻿using StackExchange.Redis;
+﻿using Infrastructure.Options;
+using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace Web.Extensions
 {
@@ -6,38 +8,21 @@ namespace Web.Extensions
     {
         public static IHostApplicationBuilder AddRedis(this IHostApplicationBuilder builder)
         {
+            var connectionString = builder.Services.BuildServiceProvider()
+                .GetRequiredService<IOptions<ConnectionStringsOptions>>().Value;
+
             builder.Services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = builder.Configuration.GetRedisConnectionString();
-                options.InstanceName = builder.Configuration["Redis:InstanceName"] ?? "Hackaton:";
+                options.Configuration = connectionString.RedisConnectionString;
+                options.InstanceName = connectionString.RedisInstanceName;
             });
 
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                var configuration = builder.Configuration.GetRedisConnectionString();
-                return ConnectionMultiplexer.Connect(configuration);
+                return ConnectionMultiplexer.Connect(connectionString.DatabaseConnectionString);
             });
 
             return builder;
-        }
-
-        public static string GetRedisConnectionString(this IConfiguration configuration)
-        {
-            var redisPassword = Environment.GetEnvironmentVariable("redis_password") ??
-                configuration["redis_password"];
-
-            if (string.IsNullOrEmpty(redisPassword))
-            {
-                throw new InvalidOperationException("redis_password is not set");
-            }
-
-            var connectionStringTemplate = configuration.GetConnectionString("Redis");
-            if (string.IsNullOrEmpty(connectionStringTemplate))
-            {
-                throw new InvalidOperationException("redis_connections string is not set");
-            }
-
-            return string.Format(connectionStringTemplate, redisPassword);
         }
     }
 }

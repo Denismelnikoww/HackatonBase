@@ -1,8 +1,6 @@
-﻿using System.Transactions;
-
-namespace Infrastructure.Settings
+﻿namespace Infrastructure.Options
 {
-    public class TransactionSettings
+    public class TransactionOptions
     {
         public int MaxRetryCount { get; set; } = 3;
         public bool EnableRetryOnFailure { get; set; } = true;

@@ -16,7 +16,7 @@ namespace Web.Extensions
 
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IJwtProvider, JwtProvider>();
-            services.AddScoped<IVerificationTokenService, VerificationTokenService>();
+            //services.AddScoped<IVerificationTokenService, VerificationTokenService>();
 
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService,UserService>();

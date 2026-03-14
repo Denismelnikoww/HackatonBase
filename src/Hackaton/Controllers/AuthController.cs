@@ -13,16 +13,16 @@ namespace API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly JwtSettings _jwtSettings;
+        private readonly JwtOptions _options;
         private readonly IJwtProvider _jwtProvider;
 
         public AuthController(IAuthService authService,
-            IOptions<JwtSettings> jwtSettings,
+            IOptions<JwtOptions> options,
             IJwtProvider jwtProvider)
         {
             _jwtProvider = jwtProvider;
             _authService = authService;
-            _jwtSettings = jwtSettings.Value;
+            _options = options.Value;
         }
 
         [HttpPost("[action]")]
@@ -33,19 +33,19 @@ namespace API.Controllers
                 request.Email,
                 ct);
 
-            Response.Cookies.Append(_jwtSettings.AccessCookieName, tokens.AccessToken, new CookieOptions
+            Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
             {
                 Secure = true,
                 HttpOnly = true,
                 SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromMinutes(_jwtSettings.AccessTokenExpirationMinutes)
+                MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
             });
-            Response.Cookies.Append(_jwtSettings.RefreshCookieName, tokens.RefreshToken, new CookieOptions
+            Response.Cookies.Append(_options.RefreshCookieName, tokens.RefreshToken, new CookieOptions
             {
                 Secure = true,
                 HttpOnly = true,
                 SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays)
+                MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
             });
 
             return Ok();
@@ -54,14 +54,14 @@ namespace API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Logout(CancellationToken ct)
         {
-            var sessionIdClaim = User.FindFirst(_jwtSettings.SessionCookieName)?.Value;
+            var sessionIdClaim = User.FindFirst(_options.SessionCookieName)?.Value;
             if (sessionIdClaim != null)
             {
                 await _authService.Logout(Guid.Parse(sessionIdClaim), ct);
             }
 
-            Response.Cookies.Delete(_jwtSettings.AccessCookieName);
-            Response.Cookies.Delete(_jwtSettings.RefreshCookieName);
+            Response.Cookies.Delete(_options.AccessCookieName);
+            Response.Cookies.Delete(_options.RefreshCookieName);
 
             return Ok();
         }
@@ -82,7 +82,7 @@ namespace API.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Refresh(CancellationToken ct)
         {
-            var refreshToken = Request.Cookies[_jwtSettings.RefreshCookieName];
+            var refreshToken = Request.Cookies[_options.RefreshCookieName];
 
             if (string.IsNullOrEmpty(refreshToken))
                 return Unauthorized();
@@ -96,21 +96,21 @@ namespace API.Controllers
 
             var tokens = await _authService.Refresh(refreshToken, userId, sessionId, ct);
 
-            Response.Cookies.Append(_jwtSettings.AccessCookieName, tokens.AccessToken, new CookieOptions
+            Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
             {
                 IsEssential = true,
                 Secure = true,
                 HttpOnly = true,
                 SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromMinutes(_jwtSettings.AccessTokenExpirationMinutes)
+                MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
             });
-            Response.Cookies.Append(_jwtSettings.RefreshCookieName, tokens.RefreshToken, new CookieOptions
+            Response.Cookies.Append(_options.RefreshCookieName, tokens.RefreshToken, new CookieOptions
             {
                 IsEssential = true,
                 Secure = true,
                 HttpOnly = true,
                 SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromDays(_jwtSettings.RefreshTokenExpirationDays)
+                MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
             });
 
             return Ok();

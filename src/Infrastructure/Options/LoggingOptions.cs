@@ -1,6 +1,6 @@
-﻿namespace Infrastructure.Settings
+﻿namespace Infrastructure.Options
 {
-    public class LoggingSettings
+    public class LoggingOptions
     {
         public string LogLevel { get; set; } = "Information";
         public bool ConsoleEnabled { get; set; } = true;

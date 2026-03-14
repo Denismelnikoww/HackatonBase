@@ -1,4 +1,4 @@
-﻿using Infrastructure.Settings;
+﻿using Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -12,23 +12,23 @@ namespace Infrastructure.Extensions
         {
             hostBuilder.UseSerilog((context, config) =>
             {
-                var settings = context.Configuration.GetSection("LoggingSettings").Get<LoggingSettings>();
+                var options = context.Configuration.GetSection("LoggingSettings").Get<LoggingOptions>();
 
-                settings ??= new LoggingSettings();
+                options ??= new LoggingOptions();
 
-                var logLevel = Enum.Parse<LogEventLevel>(settings.LogLevel);
+                var logLevel = Enum.Parse<LogEventLevel>(options.LogLevel);
                 config.MinimumLevel.Is(logLevel);
 
-                if (settings.ConsoleEnabled)
+                if (options.ConsoleEnabled)
                 {
                     config.WriteTo.Console(
                         outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"
                     );
                 }
-                if (settings.FileEnabled)
+                if (options.FileEnabled)
                 {
                     config.WriteTo.File(
-                        path: settings.LogPath,
+                        path: options.LogPath,
                         rollingInterval: RollingInterval.Day,
                         retainedFileCountLimit: 7,
                         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"

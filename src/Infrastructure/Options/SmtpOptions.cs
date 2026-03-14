@@ -1,6 +1,6 @@
-﻿namespace Infrastructure.Settings
+﻿namespace Infrastructure.Options
 {
-    public class SmtpSettings
+    public class SmtpOptions
     {
         public string Host { get; set; }
         public string Name { get; set; }

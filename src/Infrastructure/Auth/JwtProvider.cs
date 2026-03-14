@@ -11,27 +11,27 @@ namespace Infrastructure.Auth
 {
     public class JwtProvider : IJwtProvider
     {
-        private readonly JwtSettings _settings;
-        public JwtProvider(IOptions<JwtSettings> jwtSettings)
+        private readonly JwtOptions _options;
+        public JwtProvider(IOptions<JwtOptions> options)
         {
-            _settings = jwtSettings.Value;
+            _options = options.Value;
         }
 
         public string GenerateAccessToken(Guid userId, Guid sessionId, Role role)
         {
-            Claim[] claims = [new Claim(_settings.UserIdCookieName, userId.ToString()),
-                new Claim(_settings.SessionCookieName, sessionId.ToString()),
+            Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
+                new Claim(_options.SessionCookieName, sessionId.ToString()),
                 new Claim(ClaimTypes.Role, role.ToString())];
 
             var signingCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret)),
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
                 SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                issuer: _settings.Issuer,
-                audience: _settings.Audience,
-                expires: DateTime.Now.AddMinutes(_settings.AccessTokenExpirationMinutes),
+                issuer: _options.Issuer,
+                audience: _options.Audience,
+                expires: DateTime.Now.AddMinutes(_options.AccessTokenExpirationMinutes),
                 signingCredentials: signingCredentials);
 
             var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
@@ -41,18 +41,18 @@ namespace Infrastructure.Auth
 
         public string GenerateRefreshToken(Guid userId, Guid sessionId)
         {
-            Claim[] claims = [new Claim(_settings.UserIdCookieName, userId.ToString()),
-                new Claim(_settings.SessionCookieName,sessionId.ToString())];
+            Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
+                new Claim(_options.SessionCookieName,sessionId.ToString())];
 
             var signingCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Secret)),
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
                 SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                issuer: _settings.Issuer,
-                audience: _settings.Audience,
-                expires: DateTime.Now.AddDays(_settings.RefreshTokenExpirationDays),
+                issuer: _options.Issuer,
+                audience: _options.Audience,
+                expires: DateTime.Now.AddDays(_options.RefreshTokenExpirationDays),
                 signingCredentials: signingCredentials);
 
             var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
@@ -63,21 +63,21 @@ namespace Infrastructure.Auth
         public ClaimsPrincipal? ValidateRefreshToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_settings.Secret);
+            var key = Encoding.UTF8.GetBytes(_options.Secret);
 
             var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = _settings.Issuer,
+                ValidIssuer = _options.Issuer,
                 ValidateAudience = true,
-                ValidAudience = _settings.Audience,
+                ValidAudience = _options.Audience,
                 ValidateLifetime = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ClockSkew = TimeSpan.Zero
             }, out _);
 
-            if (!principal.HasClaim(c => c.Type == _settings.UserIdCookieName) ||
-                !principal.HasClaim(c => c.Type == _settings.SessionCookieName))
+            if (!principal.HasClaim(c => c.Type == _options.UserIdCookieName) ||
+                !principal.HasClaim(c => c.Type == _options.SessionCookieName))
                 return null;
 
             return principal;

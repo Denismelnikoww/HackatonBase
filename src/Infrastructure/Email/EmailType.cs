@@ -8,8 +8,5 @@
             EmailConfirm,
             ResetPassword
         }
-
-        #endregion
     }
-}
 }
