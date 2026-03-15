@@ -4,7 +4,6 @@ namespace API.Contracts.Requests
 {
     public class LoginRequest
     {
-        [Required]
         public string Login { get; set; }
 
         [Required]

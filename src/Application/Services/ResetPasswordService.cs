@@ -20,12 +20,18 @@ namespace Application.Services
 
         public async Task<Result> SendLink(string email, CancellationToken ct)
         {
-            // TODO: на проде изменить что почта подтверждена
             var user = await context.Users.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Email == email);
+                .Where(u => u.Email == email)
+                .Select(u => new
+                {
+                    IsEmailConfirmed = u.IsEmailConfirmed
+                })
+                .FirstOrDefaultAsync();
 
             if (user == null)
                 return Error.NotFound("Такого пользователя не существует");
+            if (!user.IsEmailConfirmed)
+                return Error.BadRequest("Почта данного пользователя не подтверждена");
 
             var emailId = Guid.NewGuid().ToString();
             var link = $"https://{emailId}";
@@ -43,18 +49,14 @@ namespace Application.Services
         public async Task<Result> ResetPassword(string emailId, string password, CancellationToken ct)
         {
             var email = await redisCacheService.GetAsync<string>(emailId);
-
             if (email == null)
                 return new Error("А вот и не получилось поменять чужой пароль :)", ErrorCode.ImATeapot);
 
             var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
-
             if (user == null)
                 return Error.NotFound("Такого пользователя не существует");
 
             user.PasswordHash = passwordHasher.Hash(password);
-            if (!user.IsEmailConfirmed)
-                user.ConfirmEmail();
 
             await context.SaveChangesAsync();
 

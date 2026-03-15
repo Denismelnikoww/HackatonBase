@@ -1,33 +1,43 @@
-﻿using Infrastructure.Options;
+﻿using Application.Interfaces;
+using Application.Services;
+using Infrastructure.Interfaces;
+using Infrastructure.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using ResultSharp.Core;
+using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace Web.Controllers
 {
     [Authorize]
-    [Route("/")]
-    public class EmailConfirmController : ControllerBase
+    [Route("api/[controller]")]
+    [Produces(typeof(Result))]
+    public class EmailConfirmController(IEmailConfirmService emailConfirmService) : ControllerBase
     {
+        /// <summary>
+        /// Отправляет на почту ссылку на фронт для подтверждения почты
+        /// </summary>
+        [HttpGet("[action]/{email}")]
+        public async Task<IActionResult> SendLink(string email, CancellationToken ct)
+            => await emailConfirmService.SendLink(email, ct).ToResponseAsync();
 
-        //public EmailConfirmController(IOptions<JwtOptions> options)
-        //{
+        /// <summary>
+        /// Требует авторизации.
+        /// Отправляет на почту ссылку на фронт для подтверждения почты
+        /// </summary>
+        [Authorize]
+        [HttpGet("[action]")]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> SendLink(CancellationToken ct)
+            => await emailConfirmService.SendLink(User.GetUserId(), ct).ToResponseAsync();
 
-        //}
-
-        //[HttpGet]
-        //public async Task<IActionResult> SendLink()
-        //{
-        //    var userId = User.GetUserId();
-
-        //    return Ok();
-        //}
-
-        //[HttpPost]
-        //public async Task<IActionResult> Validate()
-        //{
-
-        //}
+        /// <summary>
+        /// Подтверждение почты
+        /// </summary>
+        [HttpGet("{emailId}")]
+        public async Task<IActionResult> Validate(Guid emailId, CancellationToken ct)
+            => await emailConfirmService.ConfirmEmail(emailId.ToString(), ct).ToResponseAsync();
     }
 }

@@ -13,6 +13,8 @@ namespace Infrastructure.Email
         public EmailTemplateBuilder(IOptions<EmailTemplateOptions> options)
         {
             _options = options.Value;
+            var templatePath = Path.Combine(_options.ResourcesPath, _options.EmailTemplateWithButtonFileName);
+            _cachedTemplate = File.ReadAllText(templatePath, Encoding.UTF8);
         }
 
         public EmailData LoadEmailData(EmailType emailType, string link, int expiryTime = 30)
@@ -39,9 +41,6 @@ namespace Infrastructure.Email
 
         public string BuildEmail(EmailData emailData)
         {
-            if (emailData == null)
-                throw new ArgumentNullException(nameof(emailData));
-
             string result = _cachedTemplate
                 .Replace("{{TITLE}}", emailData.Title)
                 .Replace("{{DESCRIPTION}}", emailData.Description)
@@ -63,6 +62,5 @@ namespace Infrastructure.Email
             var data = LoadEmailData(EmailType.ResetPassword, resetLink, expiryTime);
             return BuildEmail(data);
         }
-
     }
 }

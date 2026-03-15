@@ -63,6 +63,7 @@ namespace Infrastructure.Options.Validators
                 var path = Path.Combine(options.ResourcesPath, file);
                 if (!File.Exists(path))
                     missingFiles.Add(file);
+
             }
 
             if (missingFiles.Any())

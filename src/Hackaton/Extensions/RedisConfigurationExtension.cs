@@ -19,7 +19,12 @@ namespace Web.Extensions
 
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                return ConnectionMultiplexer.Connect(connectionString.DatabaseConnectionString);
+                var config = ConfigurationOptions.Parse(connectionString.RedisConnectionString);
+                config.AbortOnConnectFail = false;
+                config.ConnectTimeout = 10000;
+
+                var muxer = ConnectionMultiplexer.Connect(config);
+                return muxer;
             });
 
             return builder;

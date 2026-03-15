@@ -1,4 +1,5 @@
 using Infrastructure.Extensions;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using Web.Extensions;
@@ -8,11 +9,11 @@ namespace Hackaton
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddEnvironmentVariables();
-            builder.Configuration.AddKeyPerFile("/run/secrets", optional: true);
+            builder.Configuration.AddKeyPerFile("/run/secrets", optional: true, reloadOnChange: true);
             builder.AddOptions();
             builder.ValidateOptions();
 

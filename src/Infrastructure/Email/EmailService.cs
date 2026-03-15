@@ -84,7 +84,7 @@ namespace Infrastructure.Email
                 _clientPool.Add(client);
                 client = null;
 
-                logger.LogDebug("Email sent to {Email}", email);
+                logger.LogInformation("Email sent to {Email}", email);
             }
             catch (Exception ex)
             {

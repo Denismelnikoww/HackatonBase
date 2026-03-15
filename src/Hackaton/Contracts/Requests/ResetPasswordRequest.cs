@@ -5,7 +5,6 @@ namespace API.Contracts.Requests
     public class ResetPasswordRequest
     {
         [Required]
-        [EmailAddress]
         public string EmailId { get; set; }
 
         [Required]

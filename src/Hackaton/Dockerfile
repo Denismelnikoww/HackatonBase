@@ -11,7 +11,7 @@ COPY src/Infrastructure/*.csproj Infrastructure/
 # Восстанавливаем зависимости
 RUN dotnet restore
 
-# Копируем все исходники
+# Копируем все исходники (включая Resources)
 COPY src .
 
 # Собираем и публикуем
@@ -22,11 +22,14 @@ RUN dotnet publish Web.csproj -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Устанавливаем curl для healthcheck (опционально)
+# Устанавливаем curl для healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Копируем собранное приложение
 COPY --from=build /app/publish .
+
+# Копируем Resources отдельно (для надёжности)
+COPY --from=build /src/Resources /app/Resources
 
 # Создаем непривилегированного пользователя
 RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app

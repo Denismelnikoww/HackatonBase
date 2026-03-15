@@ -16,16 +16,12 @@ namespace Web.Controllers
         /// </summary>
         [HttpGet("[action]/{email}")]
         public async Task<IActionResult> SendLink(string email, CancellationToken ct)
-        {
-            return await resetPasswordService.SendLink(email, ct).ToResponseAsync();
-        }
+            => await resetPasswordService.SendLink(email, ct).ToResponseAsync();
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Validate([FromBody] ResetPasswordRequest request,
             CancellationToken ct)
-        {
-            return await resetPasswordService.ResetPassword(request.EmailId,
+            => await resetPasswordService.ResetPassword(request.EmailId,
                    request.Password, ct).ToResponseAsync();
-        }
     }
 }
