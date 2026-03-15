@@ -1,15 +1,8 @@
 ﻿
 namespace Web.Middlewares
 {
-    public class SwaggerAccessMiddleware
+    public class SwaggerAccessMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public SwaggerAccessMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
         public async Task InvokeAsync(HttpContext context)
         {
             if (context.Request.Path.StartsWithSegments("/swagger"))
@@ -29,7 +22,7 @@ namespace Web.Middlewares
                 }
             }
 
-            await _next(context);
+            await next(context);
         }
     }
 }

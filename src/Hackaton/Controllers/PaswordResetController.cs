@@ -7,6 +7,7 @@ using ResultSharp.HttpResult;
 namespace Web.Controllers
 {
     [Route("api/[controller]")]
+    [Produces(typeof(Result))]
     public class PaswordResetController(
         IResetPasswordService resetPasswordService) : ControllerBase
     {
@@ -16,17 +17,15 @@ namespace Web.Controllers
         [HttpGet("[action]/{email}")]
         public async Task<IActionResult> SendLink(string email, CancellationToken ct)
         {
-            var result = await resetPasswordService.SendLink(email, ct);
-            return result.ToResponse();
+            return await resetPasswordService.SendLink(email, ct).ToResponseAsync();
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Validate([FromBody] ResetPasswordRequest request,
             CancellationToken ct)
         {
-            var result = await resetPasswordService.ResetPassword(request.EmailId,
-                   request.Password, ct);
-            return result.ToResponse();
+            return await resetPasswordService.ResetPassword(request.EmailId,
+                   request.Password, ct).ToResponseAsync();
         }
     }
 }

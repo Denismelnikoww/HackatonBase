@@ -2,22 +2,15 @@
 
 namespace Web.Middlewares
 {
-    public class ExceptionHandlingMiddleware
+    public class ExceptionHandlingMiddleware(
+        RequestDelegate next,
+        ILogger<ExceptionHandlingMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
-
-        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
-
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await _next(context);
+                await next(context);
             }
             catch (Exception ex)
             {
@@ -27,7 +20,7 @@ namespace Web.Middlewares
 
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            _logger.LogError(exception, "Произошла ошибка при обработке запроса {Method} {Path}",
+            logger.LogError(exception, "Произошла ошибка при обработке запроса {Method} {Path}",
                 context.Request.Method,
                 context.Request.Path);
 

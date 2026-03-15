@@ -4,6 +4,8 @@ using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using ResultSharp.Core;
+using ResultSharp.Errors;
 using ResultSharp.HttpResult;
 using Web.Extensions;
 
@@ -11,6 +13,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces(typeof(Result))]
     public class AuthController(IAuthService authService,
         IOptions<JwtOptions> options,
         IJwtProvider jwtProvider) : ControllerBase
@@ -29,23 +32,9 @@ namespace API.Controllers
                 return result.ToResponse();
 
             var tokens = result.Value;
+            SetTokens(tokens.AccessToken, tokens.RefreshToken);
 
-            Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
-            {
-                Secure = true,
-                HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
-            });
-            Response.Cookies.Append(_options.RefreshCookieName, tokens.RefreshToken, new CookieOptions
-            {
-                Secure = true,
-                HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
-            });
-
-            return Ok();
+            return Result.Success().ToResponse();
         }
 
         [HttpPost("[action]")]
@@ -53,27 +42,24 @@ namespace API.Controllers
         {
             var sessionIdClaim = User.FindFirst(_options.SessionCookieName)?.Value;
             if (sessionIdClaim == null)
-                return BadRequest();
+                return Result.Failure(Error.BadRequest("Сессия не активна")).ToResponse();
 
             var result = await authService.Logout(Guid.Parse(sessionIdClaim), ct);
 
-            Response.Cookies.Delete(_options.AccessCookieName);
-            Response.Cookies.Delete(_options.RefreshCookieName);
+            DeleteTokens();
 
             return result.ToResponse();
         }
 
-
         [HttpPost("[action]")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
-            var result = await authService.Register(request.Name,
+            return await authService.Register(request.Name,
                 request.Login,
                 request.Password,
                 request.Email,
-                ct);
-
-            return result.ToResponse();
+                ct)
+                .ToResponseAsync();
         }
 
         [HttpPost("[action]")]
@@ -82,22 +68,29 @@ namespace API.Controllers
             var refreshToken = Request.Cookies[_options.RefreshCookieName];
 
             if (string.IsNullOrEmpty(refreshToken))
-                return Unauthorized();
+                return Result.Failure(Error.Unauthorized("Отсутсвует рефреш токен")).ToResponse();
 
             var principal = jwtProvider.ValidateRefreshToken(refreshToken);
             if (principal == null)
-                return Unauthorized();
+                return Result.Failure(Error.Unauthorized("Рефреш токен не корректен")).ToResponse();
 
             var userId = principal.GetUserId();
             var sessionId = principal.GetSessionId();
 
             var result = await authService.Refresh(refreshToken, userId, sessionId, ct);
+
             if (result.IsFailure)
                 return result.ToResponse();
 
             var tokens = result.Value;
+            SetTokens(tokens.AccessToken, tokens.RefreshToken);
 
-            Response.Cookies.Append(_options.AccessCookieName, tokens.AccessToken, new CookieOptions
+            return result.ToResponse();
+        }
+
+        private void SetTokens(string accessToken, string refreshToken)
+        {
+            Response.Cookies.Append(_options.AccessCookieName, accessToken, new CookieOptions
             {
                 IsEssential = true,
                 Secure = true,
@@ -105,7 +98,7 @@ namespace API.Controllers
                 SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
             });
-            Response.Cookies.Append(_options.RefreshCookieName, tokens.RefreshToken, new CookieOptions
+            Response.Cookies.Append(_options.RefreshCookieName, refreshToken, new CookieOptions
             {
                 IsEssential = true,
                 Secure = true,
@@ -113,8 +106,12 @@ namespace API.Controllers
                 SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
             });
+        }
 
-            return Ok();
+        private void DeleteTokens()
+        {
+            Response.Cookies.Delete(_options.AccessCookieName);
+            Response.Cookies.Delete(_options.RefreshCookieName);
         }
     }
 }

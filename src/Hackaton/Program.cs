@@ -40,9 +40,6 @@ namespace Hackaton
                     });
             });
 
-            // После builder.Build()
-
-
             builder.Services.AddServices();
             builder.Host.UseCustomLogging();
             builder.AddClaimsPrincipalExtension();

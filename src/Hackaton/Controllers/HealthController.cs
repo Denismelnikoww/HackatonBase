@@ -5,14 +5,8 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HealthController : ControllerBase
+    public class HealthController(ILoadService loadService) : ControllerBase
     {
-        private readonly ILoadService _loadService;
-        public HealthController(ILoadService loadService)
-        {
-            _loadService = loadService;
-        }
-
         [HttpGet("[action]")]
         public async Task<IActionResult> Live()
         {
@@ -22,13 +16,13 @@ namespace API.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> CurrentLoad()
         {
-            return Ok(await _loadService.CurrentLoad());
+            return Ok(await loadService.CurrentLoad());
         }
 
         [HttpGet("[action]")]
         public async Task<IActionResult> SnapshotLoad()
         {
-            return Ok(await _loadService.SnapshotLoad());
+            return Ok(await loadService.SnapshotLoad());
         }
     }
 }
