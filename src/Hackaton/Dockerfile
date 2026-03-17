@@ -1,43 +1,38 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Копируем solution и project файлы
 COPY src/*.sln .
 COPY src/Application/*.csproj Application/
 COPY src/Domain/*.csproj Domain/
 COPY src/Hackaton/*.csproj Hackaton/
 COPY src/Infrastructure/*.csproj Infrastructure/
 
-# Восстанавливаем зависимости
 RUN dotnet restore
 
-# Копируем все исходники (включая Resources)
 COPY src .
 
-# Собираем и публикуем
 WORKDIR /src/Hackaton
-RUN dotnet build Web.csproj -c Release
 RUN dotnet publish Web.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Устанавливаем curl для healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
-# Копируем собранное приложение
 COPY --from=build /app/publish .
 
-# Копируем Resources отдельно (для надёжности)
 COPY --from=build /src/Resources /app/Resources
 
-# Создаем непривилегированного пользователя
-RUN adduser --disabled-password --gecos '' appuser && chown -R appuser /app
+RUN addgroup --system --gid 1000 appgroup && \
+    adduser --system --uid 1000 --gid 1000 appuser && \
+    chown -R appuser:appgroup /app
 USER appuser
 
-# Настройки окружения
-ENV ASPNETCORE_ENVIRONMENT=Production
-ENV ASPNETCORE_URLS=http://+:80
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:80/health || exit 1
+
+ENV ASPNETCORE_ENVIRONMENT=Production \
+    ASPNETCORE_URLS=http://+:80
 
 EXPOSE 80
 
