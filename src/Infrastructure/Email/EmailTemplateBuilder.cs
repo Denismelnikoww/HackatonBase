@@ -45,7 +45,7 @@ namespace Infrastructure.Email
                 .Replace("{{TITLE}}", emailData.Title)
                 .Replace("{{DESCRIPTION}}", emailData.Description)
                 .Replace("{{LINK}}", emailData.Link)
-                .Replace("{{BUTTON_TEXT}}", emailData.ButtonText)
+                .Replace("{{BUTTON}}", emailData.ButtonText)
                 .Replace("{{EXPIRY_TIME}}", emailData.ExpiryTime.ToString());
 
             return result;

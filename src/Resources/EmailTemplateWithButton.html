@@ -5,182 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{TITLE}}</title>
     <style>
-        * {
+        /* Основные стили */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: #030803;
-            font-family: 'Arial', 'Helvetica', sans-serif;
-            line-height: 1.5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-        
-        .email-container {
-            max-width: 520px;
-            width: 100%;
-            background-color: #0a120a;
-            border-radius: 20px;
-            padding: 40px 32px;
-            border: 1px solid #1a2a1a;
-            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.8);
-        }
-        
-        h1 {
-            color: #e0ffe0;
-            font-size: 28px;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 20px;
-            letter-spacing: -0.2px;
-            word-break: break-word;
-            text-transform: uppercase;
-            font-weight: 500;
-            border-bottom: 2px solid #1e3b1e;
-            padding-bottom: 20px;
-        }
-        
-        .accent-line {
-            width: 60px;
-            height: 2px;
-            background-color: #2bff8c;
-            margin: -10px auto 25px auto;
-            border: none;
-            opacity: 0.7;
-        }
-        
-        .description {
-            color: #b0c0b0;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 32px;
-            padding: 0 8px;
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: #f0f4ff;
+            color: #2d3748;
             line-height: 1.6;
         }
         
-        .button-container {
-            text-align: center;
-            margin-bottom: 30px;
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            overflow: hidden;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         
-        .button {
-            display: inline-block;
-            background-color: #1a2a1a;
-            color: #ffffff;
-            text-decoration: none;
+        .email-header {
+            padding: 32px 32px 16px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(106, 103, 206, 0.1), rgba(139, 92, 246, 0.1));
+        }
+        
+        .email-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 12px;
+            color: #2d3748;
+        }
+        
+        .email-subtitle {
             font-size: 16px;
-            font-weight: 500;
-            padding: 14px 36px;
-            border-radius: 40px;
-            border: 1px solid #2bff8c;
-            letter-spacing: 0.3px;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
+            color: #718096;
+            margin: 0;
         }
         
-        .button:hover {
-            background-color: #1f351f;
-            border-color: #5cffad;
+        .email-body {
+            padding: 32px;
         }
         
-        .divider-line {
-            width: 100%;
-            height: 1px;
-            background-color: #1f331f;
-            margin: 25px 0 20px 0;
+        .email-description {
+            font-size: 16px;
+            color: #2d3748;
+            margin: 0 0 24px;
         }
         
-        .fallback-link {
-            text-align: center;
-            font-size: 13px;
-            color: #4a6b4a;
-        }
-        
-        .fallback-link a {
-            color: #6da86d;
+        .action-button {
+            display: inline-block;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #6a67ce, #8b5cf6);
+            color: white !important;
             text-decoration: none;
-            border-bottom: 1px dashed #2b5a2b;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin: 0 auto 24px;
+            display: block;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(106, 103, 206, 0.3);
+        }
+        
+        .link-text {
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .link-url {
+            color: #6a67ce;
             word-break: break-all;
         }
         
-        .fallback-link a:hover {
-            color: #8bff8b;
-            border-bottom-color: #2bff8c;
-        }
-        
-        .footer-note {
+        .email-footer {
+            padding: 24px 32px;
             text-align: center;
-            font-size: 12px;
-            color: #2f402f;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #1a261a;
+            background: rgba(136, 136, 136, 0.05);
+            font-size: 14px;
+            color: #718096;
         }
         
-        /* Вторая акцентная линия сверху */
-        .top-line {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #2bff8c, transparent);
-            margin-bottom: 25px;
-            opacity: 0.5;
-        }
-        
-        @media (max-width: 480px) {
+        /* Адаптивность */
+        @media (max-width: 600px) {
             .email-container {
-                padding: 30px 20px;
+                margin: 10px;
             }
             
-            h1 {
+            .email-header,
+            .email-body,
+            .email-footer {
+                padding: 20px;
+            }
+            
+            .email-title {
                 font-size: 24px;
-            }
-            
-            .button {
-                display: block;
-                padding: 14px 20px;
-            }
-            
-            .fallback-link a {
-                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="email-container">
-        
-        <div class="top-line"></div>
-        <h1>{{TITLE}}</h1>
-        
-        
-        <div class="accent-line"></div>
-        
-        <div class="description">{{DESCRIPTION}}</div>
-        
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0f4ff;">
+        <tr>
+            <td align="center">
+                <table class="email-container" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+                    <tr>
+                        <td class="email-header">
+                            <h1 class="email-title">{{TITLE}}</h1>
+                      
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-body">
+                            <p class="email-description">{{DESCRIPTION}}</p>
+                            
+                            <a href="{{LINK}}" class="action-button">{{BUTTON}}</a>
+                            
+                            <p class="link-text">
+                                Если кнопка не работает, перейдите по ссылке:<br>
 
-        <div class="button-container">
-            <a href="{{LINK}}" class="button">{{BUTTON_TEXT}}</a>
-        </div>
-        
- 
-        <div class="divider-line"></div>
-        
-     
-        <div class="fallback-link">
-            <span style="color: #4f6b4f;">Если кнопка не работает:</span><br>
-            <a href="{{LINK}}">{{LINK}}</a>
-        </div>
-        
-
-        <div class="footer-note">
-            Ссылка действительна в течение {{EXPIRY_TIME}} минут
-        </div>
-    </div>
+                                <span class="link-url"><a href="{{LINK}}" style="color: #6a67ce;">{{LINK}}</a></span>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="email-footer">
+                            <p>&copy; 2026 Shkets. Все права защищены.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

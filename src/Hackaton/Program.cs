@@ -27,6 +27,7 @@ namespace Hackaton
             builder.AddHangfire();
 
             builder.Services.AddServices();
+            builder.Services.AddBackgroundJobs();
             builder.Host.UseCustomLogging();
             builder.AddClaimsPrincipalExtension();
             builder.AddHttpClients();
