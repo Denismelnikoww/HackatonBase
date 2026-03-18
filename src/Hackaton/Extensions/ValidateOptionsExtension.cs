@@ -35,6 +35,16 @@ namespace Web.Extensions
                 })
                 .ValidateOnStart();
 
+            services.AddOptions<MistralOptions>()
+               .Bind(configuration.GetSection("MistralOptions"))
+               .PostConfigure(options =>
+               {
+                   options.ApiKey = Environment.GetEnvironmentVariable("MISTRAL_API_KEY")
+                       ?? configuration["MISTRAL_API_KEY"]
+                       ?? options.ApiKey;
+               })
+               .ValidateOnStart();
+
             services.AddOptions<EmailTemplateOptions>()
                 .Bind(configuration.GetSection("EmailTemplateOptions"))
                 .ValidateOnStart();
@@ -72,6 +82,7 @@ namespace Web.Extensions
             builder.Services.AddSingleton<IValidateOptions<LoggingOptions>, LoggingOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<VerificationCacheOptions>, VerificationCacheOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<ConnectionStringsOptions>, ConnectionStringsOptionsValidator>();
+            builder.Services.AddSingleton<IValidateOptions<MistralOptions>, MistralOptionsValidator>();
 
             return builder;
         }

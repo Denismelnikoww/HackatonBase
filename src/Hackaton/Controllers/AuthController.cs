@@ -24,9 +24,7 @@ namespace API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
         {
             var result = await authService.Login(request.Login,
-                request.Password,
-                request.Email,
-                ct);
+                request.Password, ct);
 
             if (result.IsFailure)
                 return result.ToResponse();

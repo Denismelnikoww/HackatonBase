@@ -3,6 +3,7 @@ using Application.Services;
 using Infrastructure.Auth;
 using Infrastructure.Email;
 using Infrastructure.Interfaces;
+using Infrastructure.Mistral;
 using Infrastructure.Services;
 
 namespace Web.Extensions
@@ -20,6 +21,8 @@ namespace Web.Extensions
 
             services.AddScoped<IEmailTemplateBuilder, EmailTemplateBuilder>();
             services.AddScoped<IEmailService, EmailService>();
+
+            services.AddScoped<IMistralService, MistralService>();
 
             services.AddScoped<IResetPasswordService, ResetPasswordService>();
             services.AddScoped<IAuthService, AuthService>();

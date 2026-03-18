@@ -1,17 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Options.Validators
 {
     public class SmtpOptionsValidator : IValidateOptions<SmtpOptions>
     {
-        private readonly ILogger<SmtpOptionsValidator> _logger;
-
-        public SmtpOptionsValidator(ILogger<SmtpOptionsValidator> logger = null)
-        {
-            _logger = logger;
-        }
-
         public ValidateOptionsResult Validate(string name, SmtpOptions options)
         {
             var errors = new List<string>();

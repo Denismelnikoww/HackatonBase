@@ -1,7 +1,4 @@
 using Infrastructure.Extensions;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.OpenApi.Models;
-using System.Reflection;
 using Web.Extensions;
 using Web.Middlewares;
 
@@ -20,14 +17,20 @@ namespace Hackaton
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.AddHangfire();
+            builder.Services.AddXmlCommentsToSwagger();
 
             builder.AddAuth();
 
             builder.AddDb();
             builder.AddRedis();
 
-            builder.Services.AddXmlCommentsToSwagger();
+            builder.AddHangfire();
+
+            builder.Services.AddServices();
+            builder.Host.UseCustomLogging();
+            builder.AddClaimsPrincipalExtension();
+            builder.AddHttpClients();
+            builder.Services.AddCoreAdmin(builder.Environment.IsDevelopment() ? string.Empty : "Admin");
 
             builder.Services.AddCors(options =>
             {
@@ -41,10 +44,6 @@ namespace Hackaton
                     });
             });
 
-            builder.Services.AddServices();
-            builder.Host.UseCustomLogging();
-            builder.AddClaimsPrincipalExtension();
-            builder.Services.AddCoreAdmin(builder.Environment.IsDevelopment() ? string.Empty : "Admin");
 
             var app = builder.Build();
 
@@ -66,7 +65,7 @@ namespace Hackaton
             app.MapControllers();
             app.MapDefaultControllerRoute();
 
-            app.UseCoreAdminCustomTitle("admin");
+            app.UseCoreAdminCustomTitle("Shkets");
 
             app.ApplyMigrations();
 

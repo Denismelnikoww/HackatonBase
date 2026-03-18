@@ -1,18 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using static Infrastructure.Email.EmailTemplateBuilder;
 
 namespace Infrastructure.Options.Validators
 {
     public class EmailTemplateOptionsValidator : IValidateOptions<EmailTemplateOptions>
     {
-        private readonly ILogger<EmailTemplateOptionsValidator> _logger;
-
-        public EmailTemplateOptionsValidator(ILogger<EmailTemplateOptionsValidator> logger)
-        {
-            _logger = logger;
-        }
-
         public ValidateOptionsResult Validate(string name, EmailTemplateOptions options)
         {
             if (string.IsNullOrEmpty(options.ResourcesPath))
@@ -23,7 +15,6 @@ namespace Infrastructure.Options.Validators
 
             if (!Directory.Exists(options.ResourcesPath))
             {
-                _logger.LogWarning("Папка с ресурсами не существует: {Path}", options.ResourcesPath);
                 return ValidateOptionsResult.Fail($"Папка не существует: {options.ResourcesPath}");
             }
 

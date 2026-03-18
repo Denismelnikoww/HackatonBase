@@ -46,17 +46,15 @@ namespace Application.Services
 
         public async Task<Result<JwtTokens>> Login(string? login,
             string password,
-            string? email = null,
             CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(login) && string.IsNullOrWhiteSpace(email))
-                return Error.BadRequest("Нужен хотя бы один идентификатор (email или логин)");
+            if (string.IsNullOrWhiteSpace(login))
+                return Error.BadRequest("Логин не должен быть пустым");
 
-            login ??= string.Empty;
-            email ??= string.Empty;
+            login = login.ToLower() ?? string.Empty;
 
             var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login.ToLower())
-                || (u.IsEmailConfirmed && u.Email == email.ToLower()), ct);
+                || (u.IsEmailConfirmed && u.Email == login), ct);
 
             if (user == null)
                 return Error.NotFound("Такого пользователя не существует");
