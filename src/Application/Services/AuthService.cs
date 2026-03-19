@@ -1,23 +1,18 @@
 ﻿using Application.DTO;
-using Application.Interfaces;
+using Domain.Exceptions;
 using Domain.Models.User;
-using Domain.Specification.UserSpecification;
 using Infrastructure.DbContexts;
-using Infrastructure.Extensions;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using ResultSharp.Core;
-using ResultSharp.Errors;
-using ResultSharp.Errors.Enums;
 
 namespace Application.Services
 {
     public class AuthService(
         UserDbContext context,
         IJwtProvider jwtProvider,
-        IPasswordHasher passwordHasher) : IAuthService
+        IPasswordHasher passwordHasher)
     {
-        public async Task<Result> Register(
+        public async Task Register(
            string name,
            string login,
            string password,
@@ -32,7 +27,7 @@ namespace Application.Services
                     || u.Email == email, ct);
 
             if (user != null)
-                return Error.Conflict("Пользователь с таким логином и/или почтой уже существует");
+                throw new ConflictException("Пользователь с таким логином и/или почтой уже существует");
 
             var newUser = new User
             {
@@ -44,16 +39,14 @@ namespace Application.Services
 
             await context.Users.AddAsync(newUser, ct);
             await context.SaveChangesAsync(ct);
-            return Result.Success();
         }
 
-
-        public async Task<Result<JwtTokens>> Login(string? login,
+        public async Task<JwtTokens> Login(string? login,
             string password,
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(login))
-                return Error.BadRequest("Логин не должен быть пустым");
+                throw new BadRequestException("Логин не должен быть пустым");
 
             login = login.ToLower() ?? string.Empty;
 
@@ -61,10 +54,10 @@ namespace Application.Services
                 || (u.IsEmailConfirmed && u.Email == login), ct);
 
             if (user == null)
-                return Error.NotFound("Такого пользователя не существует");
+                throw new NotFoundException("Такого пользователя не существует");
 
             if (!passwordHasher.Verify(password, user.PasswordHash))
-                return Error.BadRequest("Неверный пароль");
+                throw new BadRequestException("Неверный пароль");
 
             var session = new Session
             {
@@ -94,41 +87,36 @@ namespace Application.Services
             return tokens;
         }
 
-        public async Task<Result> ResetPassword(Guid userId,
+        public async Task ResetPassword(Guid userId,
            string oldPassword, string newPassword,
            CancellationToken ct = default)
         {
             var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
 
             if (user == null)
-                return Error.NotFound("Такого пользователя не существует");
+                throw new NotFoundException("Такого пользователя не существует");
 
             if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
-                return Error.BadRequest("Неверный пароль");
+                throw new BadRequestException("Неверный пароль");
 
-            //users.
             await context.SaveChangesAsync(ct);
-
-            return Result.Success();
         }
 
-        public async Task<Result> Logout(Guid sessionId,
+        public async Task Logout(Guid sessionId,
             CancellationToken ct = default)
         {
             var session = await context.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
             if (session == null)
-                return Error.NotFound("Такой сесиии не существует");
+                throw new NotFoundException("Такой сесиии не существует");
 
             session.IsActive = false;
             session.LastActivity = DateTime.UtcNow;
             session.LogoutDate = DateTime.UtcNow;
             await context.SaveChangesAsync(ct);
-
-            return Result.Success();
         }
 
-        public async Task<Result<JwtTokens>> Refresh(string refreshToken,
+        public async Task<JwtTokens> Refresh(string refreshToken,
             Guid userId,
             Guid sessionId,
             CancellationToken ct)
@@ -137,10 +125,10 @@ namespace Application.Services
                 .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
             if (user == null)
-                return Error.NotFound("Такого пользователя не существует");
+                throw new NotFoundException("Такого пользователя не существует");
 
             if (user.IsDeleted || user.IsBanned)
-                return Error.BadRequest("Пользователь удален или заблокирован");
+                throw new BadRequestException("Пользователь удален или заблокирован");
 
             var session = await context.UserSessions
                 .Include(s => s.Token)
@@ -148,20 +136,20 @@ namespace Application.Services
                 .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
             if (session == null)
-                return Error.NotFound("Такой сессии не существует");
+                throw new NotFoundException("Такой сессии не существует");
 
             if (session.Token?.RefreshToken != refreshToken)
             {
                 session.IsActive = false;
                 await context.SaveChangesAsync(ct);
-                return new Error("Обнаружена подмена токена :)", ErrorCode.ImATeapot);
+                throw new TeapotException("Обнаружена подмена токена :)");
             }
 
             if (session.User.IsBanned)
-                return Error.BadRequest("Пользователь заблокирован");
+                throw new BadRequestException("Пользователь заблокирован");
 
             if (!session.IsActive)
-                return Error.BadRequest("Данная сессия не активна");
+                throw new BadRequestException("Данная сессия не активна");
 
             session.Token.IsRevoked = true;
 

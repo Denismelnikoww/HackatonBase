@@ -4,9 +4,6 @@ using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using ResultSharp.Core;
-using ResultSharp.Errors;
-using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace API.Controllers
@@ -20,12 +17,11 @@ namespace API.Controllers
         private readonly JwtOptions _options = options.Value;
 
         [HttpPost("[action]")]
-        public async Task<Result> Login([FromBody] LoginRequest request, CancellationToken ct)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
         {
-            var result = await authService.Login(request.Login,
+            var tokens = await authService.Login(request.Login,
                 request.Password, ct);
 
-            var tokens = result.Value;
             SetTokens(tokens.AccessToken, tokens.RefreshToken);
 
             return Ok();
@@ -36,9 +32,9 @@ namespace API.Controllers
         {
             var sessionIdClaim = User.FindFirst(_options.SessionCookieName)?.Value;
             if (sessionIdClaim == null)
-                return Result.Failure(Error.BadRequest("Сессия не активна")).ToResponse();
+                return BadRequest("Сессия не активна");
 
-            var result = await authService.Logout(Guid.Parse(sessionIdClaim), ct);
+            await authService.Logout(Guid.Parse(sessionIdClaim), ct);
 
             DeleteTokens();
 
@@ -67,20 +63,16 @@ namespace API.Controllers
 
             var principal = jwtProvider.ValidateRefreshToken(refreshToken);
             if (principal == null)
-                return Result.Failure(Error.Unauthorized("Рефреш токен не корректен")).ToResponse();
+                return Unauthorized("Рефреш токен не корректен");
 
             var userId = principal.GetUserId();
             var sessionId = principal.GetSessionId();
 
-            var result = await authService.Refresh(refreshToken, userId, sessionId, ct);
+            var tokens = await authService.Refresh(refreshToken, userId, sessionId, ct);
 
-            if (result.IsFailure)
-                return result.ToResponse();
-
-            var tokens = result.Value;
             SetTokens(tokens.AccessToken, tokens.RefreshToken);
 
-            return result.ToResponse();
+            return Ok();
         }
 
         private void SetTokens(string accessToken, string refreshToken)

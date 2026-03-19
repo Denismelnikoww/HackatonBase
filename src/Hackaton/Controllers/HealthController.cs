@@ -1,28 +1,13 @@
-﻿using Infrastructure.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class HealthController(ILoadService loadService) : ControllerBase
+    public class HealthController : ControllerBase
     {
         [HttpGet("[action]")]
-        public async Task<IActionResult> Live()
-        {
-            return Ok(DateTime.UtcNow);
-        }
-
-        [HttpGet("[action]")]
-        public async Task<IActionResult> CurrentLoad()
-        {
-            return Ok(await loadService.CurrentLoad());
-        }
-
-        [HttpGet("[action]")]
-        public async Task<IActionResult> SnapshotLoad()
-        {
-            return Ok(await loadService.SnapshotLoad());
-        }
+        public async Task<DateTime> Live()
+           => DateTime.UtcNow;
     }
 }

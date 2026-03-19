@@ -1,14 +1,12 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ResultSharp.Core;
 using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace Web.Controllers
 {
     [Route("api/[controller]")]
-    [Produces(typeof(Result))]
     public class EmailConfirmController(IEmailConfirmService emailConfirmService) : ControllerBase
     {
         /// <summary>
@@ -16,7 +14,10 @@ namespace Web.Controllers
         /// </summary>
         [HttpGet("[action]/{email}")]
         public async Task<IActionResult> SendLink(string email, CancellationToken ct)
-            => await emailConfirmService.SendLink(email, ct).ToResponseAsync();
+        {
+            await emailConfirmService.SendLink(email, ct);
+            return Ok();
+        }
 
         /// <summary>
         /// Требует авторизации.
@@ -26,13 +27,19 @@ namespace Web.Controllers
         [HttpGet("[action]")]
         [ProducesResponseType(401)]
         public async Task<IActionResult> SendLink(CancellationToken ct)
-            => await emailConfirmService.SendLink(User.GetUserId(), ct).ToResponseAsync();
+        {
+            await emailConfirmService.SendLink(User.GetUserId(), ct);
+            return Ok();
+        }
 
         /// <summary>
         /// Подтверждение почты
         /// </summary>
         [HttpGet("{emailId}")]
         public async Task<IActionResult> Validate(Guid emailId, CancellationToken ct)
-            => await emailConfirmService.ConfirmEmail(emailId.ToString(), ct).ToResponseAsync();
+        {
+            await emailConfirmService.ConfirmEmail(emailId.ToString(), ct);
+            return Ok();
+        }
     }
 }
