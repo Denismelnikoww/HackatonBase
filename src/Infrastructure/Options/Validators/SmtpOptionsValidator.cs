@@ -19,10 +19,7 @@ namespace Infrastructure.Options.Validators
 
             if (options.Port <= 0 || options.Port > 65535)
                 errors.Add("Port должен быть в диапазоне 1-65535");
-
-            if (options.MaxConcurrentConnections <= 0)
-                errors.Add("MaxConcurrentConnections должен быть больше 0");
-
+            
             if (options.MaxRetryAttempts < 0)
                 errors.Add("MaxRetryAttempts не может быть отрицательным");
 

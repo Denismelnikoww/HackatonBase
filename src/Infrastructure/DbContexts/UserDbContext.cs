@@ -35,6 +35,11 @@ namespace Infrastructure.DbContexts
                     .HasColumnType("uuid")
                     .ValueGeneratedNever();
 
+                builder.Property(x => x.Name)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("varchar(100)");
+
                 builder.Property(x => x.Login)
                     .IsRequired()
                     .HasMaxLength(50)
@@ -70,6 +75,10 @@ namespace Infrastructure.DbContexts
                     .IsUnique()
                     .HasDatabaseName("IX_Users_Login");
 
+                builder.HasIndex(x => x.Name)
+                    .HasDatabaseName("IX_Users_Name")
+                    .HasFilter("\"Email\" IS NOT NULL");
+                
                 builder.HasIndex(x => x.Email)
                     .IsUnique()
                     .HasDatabaseName("IX_Users_Email")

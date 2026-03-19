@@ -86,6 +86,13 @@ namespace API.Controllers
             return result.ToResponse();
         }
 
+        [HttpPost("[action]")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct )
+        {
+            
+            return Ok();
+        }
+
         private void SetTokens(string accessToken, string refreshToken)
         {
             Response.Cookies.Append(_options.AccessCookieName, accessToken, new CookieOptions

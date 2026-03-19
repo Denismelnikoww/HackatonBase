@@ -1,10 +1,6 @@
 ﻿using Application.Interfaces;
-using Application.Services;
-using Infrastructure.Interfaces;
-using Infrastructure.Options;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using ResultSharp.Core;
 using ResultSharp.HttpResult;
 using Web.Extensions;

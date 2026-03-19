@@ -106,6 +106,26 @@ namespace Application.Services
             return Result.Success();
         }
 
+        public async Task<Result> ResetPassword(Guid userId,string oldPassword,string newPassword,CancellationToken ct)
+        {
+            var user = await context.Users.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+            if (user == null)
+                return Error.NotFound("Такого пользователя не существует");
+
+            if (user.IsDeleted || user.IsBanned)
+                return Error.BadRequest("Пользователь удален или заблокирован");
+            
+            if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
+                return Error.BadRequest("Неверный пароль");
+
+            user.PasswordHash = passwordHasher.Hash(newPassword);
+            user.PasswordChangeDate = DateTime.Now;
+            
+            return Result.Success();
+        }
+
         public async Task<Result<JwtTokens>> Refresh(string refreshToken,
             Guid userId,
             Guid sessionId,

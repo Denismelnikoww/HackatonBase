@@ -8,7 +8,7 @@ namespace Web.Controllers
 {
     [Route("api/[controller]")]
     [Produces(typeof(Result))]
-    public class PaswordResetController(
+    public class PaswordResetByEmailController(
         IResetPasswordService resetPasswordService) : ControllerBase
     {
         /// <summary>
@@ -19,9 +19,9 @@ namespace Web.Controllers
             => await resetPasswordService.SendLink(email, ct).ToResponseAsync();
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Validate([FromBody] ResetPasswordRequest request,
+        public async Task<IActionResult> Validate([FromBody] ResetPasswordByEmailRequest byEmailRequest,
             CancellationToken ct)
-            => await resetPasswordService.ResetPassword(request.EmailId,
-                   request.Password, ct).ToResponseAsync();
+            => await resetPasswordService.ResetPassword(byEmailRequest.EmailId,
+                   byEmailRequest.Password, ct).ToResponseAsync();
     }
 }
