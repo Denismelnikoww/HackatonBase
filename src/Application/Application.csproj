@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="4q-dev.ResultSharp" Version="1.0.20" />
     <PackageReference Include="4q-dev.ResultSharp.HttpResult" Version="1.0.1" />
   </ItemGroup>
 

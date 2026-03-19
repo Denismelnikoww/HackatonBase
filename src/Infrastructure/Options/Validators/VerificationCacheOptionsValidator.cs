@@ -2,9 +2,9 @@
 
 namespace Infrastructure.Options.Validators
 {
-    public class VerificationCacheOptionsValidator : IValidateOptions<VerificationCacheOptions>
+    public class VerificationCacheOptionsValidator : IValidateOptions<VerificationOptions>
     {
-        public ValidateOptionsResult Validate(string name, VerificationCacheOptions options)
+        public ValidateOptionsResult Validate(string name, VerificationOptions options)
         {
             var errors = new List<string>();
 

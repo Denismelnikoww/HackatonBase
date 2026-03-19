@@ -14,8 +14,6 @@ namespace Web.Extensions
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
-            services.AddSingleton<ILoadService, LoadService>();
-
             services.AddSingleton<IRedisCacheService, RedisCacheService>();
 
             services.AddScoped<IPasswordHasher, PasswordHasher>();

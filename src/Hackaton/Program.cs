@@ -1,6 +1,7 @@
 using Infrastructure.Extensions;
 using Web.Extensions;
 using Web.Middlewares;
+using Web.Middlewares.Web.Middlewares;
 
 namespace Hackaton
 {

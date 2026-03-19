@@ -1,13 +1,10 @@
 ﻿using API.Contracts.Requests;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using ResultSharp.Core;
-using ResultSharp.HttpResult;
 
 namespace Web.Controllers
 {
     [Route("api/[controller]")]
-    [Produces(typeof(Result))]
     public class PaswordResetByEmailController(
         IResetPasswordService resetPasswordService) : ControllerBase
     {
@@ -16,12 +13,18 @@ namespace Web.Controllers
         /// </summary>
         [HttpGet("[action]/{email}")]
         public async Task<IActionResult> SendLink(string email, CancellationToken ct)
-            => await resetPasswordService.SendLink(email, ct).ToResponseAsync();
+        {
+            await resetPasswordService.SendLink(email, ct);
+            return Ok();
+        }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Validate([FromBody] ResetPasswordByEmailRequest byEmailRequest,
             CancellationToken ct)
-            => await resetPasswordService.ResetPassword(byEmailRequest.EmailId,
-                   byEmailRequest.Password, ct).ToResponseAsync();
+        {
+            await resetPasswordService.ResetPassword(byEmailRequest.EmailId,
+                   byEmailRequest.Password, ct);
+            return Ok();
+        }
     }
 }

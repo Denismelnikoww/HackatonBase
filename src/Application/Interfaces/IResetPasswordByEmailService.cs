@@ -1,10 +1,8 @@
-﻿using ResultSharp.Core;
-
-namespace Infrastructure.Interfaces
+﻿namespace Infrastructure.Interfaces
 {
     public interface IResetPasswordByEmailService
     {
-        Task<Result> ResetPassword(string email, string password, CancellationToken ct);
-        Task<Result> SendLink(string email, CancellationToken ct);
+        Task ResetPassword(string email, string password, CancellationToken ct);
+        Task SendLink(string email, CancellationToken ct);
     }
 }

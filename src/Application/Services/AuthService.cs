@@ -1,4 +1,5 @@
 ﻿using Application.DTO;
+using Application.Interfaces;
 using Domain.Exceptions;
 using Domain.Models.User;
 using Infrastructure.DbContexts;
@@ -10,7 +11,7 @@ namespace Application.Services
     public class AuthService(
         UserDbContext context,
         IJwtProvider jwtProvider,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher) : IAuthService
     {
         public async Task Register(
            string name,

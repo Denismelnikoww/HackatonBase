@@ -2,8 +2,6 @@
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ResultSharp.Core;
-using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace API.Controllers
@@ -13,28 +11,24 @@ namespace API.Controllers
         IUserService userService) : ControllerBase
     {
         [HttpGet("[action]/{id}")]
-        [Produces(typeof(Result<UserInfo?>))]
+        [Produces(typeof(UserInfo))]
         public async Task<IActionResult> Info(Guid id, CancellationToken ct)
-            => await userService.GetInfo(id, ct).ToResponseAsync();
+        {
+            await userService.GetInfo(id, ct);
+            return Ok();
+        }
 
         /// <summary>
         /// Требует авторизации
         /// </summary>
         [Authorize]
         [HttpGet("[action]")]
-        [Produces(typeof(Result<UserInfo?>))]
+        [Produces(typeof(UserInfo))]
         [ProducesResponseType(401)]
         public async Task<IActionResult> Info(CancellationToken ct)
-            => await userService.GetInfo(User.GetUserId(), ct).ToResponseAsync();
-
-        /// <summary>
-        /// Требует авторизации
-        /// </summary>
-        [Authorize]
-        [HttpGet("[action]")]
-        [Produces(typeof(Result))]
-        [ProducesResponseType(401)]
-        public async Task<IActionResult> UpdateActivity()
-            => await userService.UpdateActivity(User.GetSessionId()).ToResponseAsync();
+        {
+            await userService.GetInfo(User.GetUserId(), ct);
+            return Ok();
+        }
     }
 }

@@ -11,13 +11,13 @@ namespace Application.Services
 {
     public class EmailConfirmService(
         IRedisCacheService redisCacheService,
-        IOptions<VerificationCacheOptions> options,
+        IOptions<VerificationOptions> options,
         IEmailTemplateBuilder emailTemplateBuilder,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
         UserDbContext context) : IEmailConfirmService
     {
-        private readonly VerificationCacheOptions _options = options.Value;
+        private readonly VerificationOptions _options = options.Value;
 
         public async Task SendLink(string email, CancellationToken ct)
         {
@@ -33,7 +33,7 @@ namespace Application.Services
             if (user.IsEmailConfirmed) throw new ConflictException("Почта данного пользователя уже подтверждена");
 
             var emailId = Guid.NewGuid().ToString();
-            var link = $"https://{emailId}";
+            var link = $"https://{_options.ConfirmEmailLink}?emailId={emailId}";
 
             await redisCacheService.SetAsync(emailId, email,
                 TimeSpan.FromMinutes(_options.EmailExpirationMinutes));

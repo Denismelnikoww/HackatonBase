@@ -6,12 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="4q-dev.ResultSharp" Version="1.0.20" />
-  </ItemGroup>
-
 </Project>

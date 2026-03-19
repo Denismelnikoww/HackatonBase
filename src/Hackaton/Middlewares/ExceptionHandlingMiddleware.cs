@@ -1,61 +1,66 @@
-﻿using System.Text.Json;
+﻿using Domain.Exceptions;
+using System.Text.Json;
 
 namespace Web.Middlewares
 {
-    public class ExceptionHandlingMiddleware(
-        RequestDelegate next,
-        ILogger<ExceptionHandlingMiddleware> logger)
+    namespace Web.Middlewares
     {
-        public async Task InvokeAsync(HttpContext context)
+        public class ExceptionHandlingMiddleware(
+            RequestDelegate next,
+            ILogger<ExceptionHandlingMiddleware> logger)
         {
-            try
+            public async Task InvokeAsync(HttpContext context)
             {
-                await next(context);
+                try
+                {
+                    await next(context);
+                }
+                catch (Exception ex)
+                {
+                    await HandleExceptionAsync(context, ex);
+                }
             }
-            catch (Exception ex)
+
+            private async Task HandleExceptionAsync(HttpContext context, Exception exception)
             {
-                await HandleExceptionAsync(context, ex);
+                logger.LogError(exception, "Произошла ошибка при обработке запроса {Method} {Path}",
+                    context.Request.Method,
+                    context.Request.Path);
+
+                var response = context.Response;
+                response.ContentType = "application/json";
+
+                var (statusCode, message) = GetStatusCodeAndMessage(exception);
+                response.StatusCode = statusCode;
+
+                var errorResponse = new
+                {
+                    StatusCode = statusCode,
+                    Message = message,
+                    Timestamp = DateTime.UtcNow,
+                    Path = context.Request.Path,
+                };
+
+                var json = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                await response.WriteAsync(json);
             }
-        }
 
-        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
-        {
-            logger.LogError(exception, "Произошла ошибка при обработке запроса {Method} {Path}",
-                context.Request.Method,
-                context.Request.Path);
-
-            var response = context.Response;
-            response.ContentType = "application/json";
-
-            var (statusCode, message) = GetStatusCodeAndMessage(exception);
-            response.StatusCode = statusCode;
-
-            var errorResponse = new
+            private static (int statusCode, string message) GetStatusCodeAndMessage(Exception exception)
             {
-                StatusCode = statusCode,
-                Message = message,
-                Timestamp = DateTime.UtcNow,
-                Path = context.Request.Path
-            };
-
-            var json = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
-
-            await response.WriteAsync(json);
-        }
-
-        private static (int statusCode, string message) GetStatusCodeAndMessage(Exception exception)
-        {
-            return exception switch
-            {
-                UnauthorizedAccessException => (401, "Не авторизован"),
-                KeyNotFoundException => (404, "Ресурс не найден"),
-                ArgumentException => (400, exception.Message),
-                InvalidOperationException => (400, exception.Message),
-                _ => (500, "Внутренняя ошибка сервера")
-            };
+                return exception switch
+                {
+                    NotFoundException => (404, exception.Message),
+                    UnauthorizedException => (401, exception.Message),
+                    ConflictException => (409, exception.Message),
+                    ValidationException => (400, exception.Message),
+                    BadRequestException => (400, exception.Message),
+                    _ => (500, "Внутренняя ошибка сервера")
+                };
+            }
         }
     }
 }
