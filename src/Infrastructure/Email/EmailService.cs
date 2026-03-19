@@ -31,11 +31,11 @@ namespace Infrastructure.Email
                 subject,
                 text,
                 _options.Host,
+                _options.UsePortAndSsl,
                 _options.Port,
                 _options.Email,
                 _options.Password,
                 _options.Name,
-                _options.UseSsl,
                 _options.TimeoutSeconds,
                 _options.MaxRetryAttempts,
                 _options.RetryDelaySeconds

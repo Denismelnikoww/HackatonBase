@@ -1,7 +1,9 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
 using Domain.Models.User;
+using Domain.Specification.UserSpecification;
 using Infrastructure.DbContexts;
+using Infrastructure.Extensions;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using ResultSharp.Core;
@@ -16,16 +18,17 @@ namespace Application.Services
         IPasswordHasher passwordHasher) : IAuthService
     {
         public async Task<Result> Register(
-            string name,
-            string login,
-            string password,
-            string? email = null,
-            CancellationToken ct = default)
+           string name,
+           string login,
+           string password,
+           string? email = null,
+           CancellationToken ct = default)
         {
             email = email?.ToLower() ?? string.Empty;
+            login = login?.ToLower() ?? string.Empty;
 
             var user = await context.Users.AsNoTracking()
-                .FirstOrDefaultAsync(u => (u.Login == login.ToLower())
+                .FirstOrDefaultAsync(u => u.Login == login
                     || u.Email == email, ct);
 
             if (user != null)
@@ -43,6 +46,7 @@ namespace Application.Services
             await context.SaveChangesAsync(ct);
             return Result.Success();
         }
+
 
         public async Task<Result<JwtTokens>> Login(string? login,
             string password,
@@ -90,6 +94,24 @@ namespace Application.Services
             return tokens;
         }
 
+        public async Task<Result> ResetPassword(Guid userId,
+           string oldPassword, string newPassword,
+           CancellationToken ct = default)
+        {
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+
+            if (user == null)
+                return Error.NotFound("Такого пользователя не существует");
+
+            if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
+                return Error.BadRequest("Неверный пароль");
+
+            //users.
+            await context.SaveChangesAsync(ct);
+
+            return Result.Success();
+        }
+
         public async Task<Result> Logout(Guid sessionId,
             CancellationToken ct = default)
         {
@@ -103,26 +125,6 @@ namespace Application.Services
             session.LogoutDate = DateTime.UtcNow;
             await context.SaveChangesAsync(ct);
 
-            return Result.Success();
-        }
-
-        public async Task<Result> ResetPassword(Guid userId,string oldPassword,string newPassword,CancellationToken ct)
-        {
-            var user = await context.Users.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == userId, ct);
-
-            if (user == null)
-                return Error.NotFound("Такого пользователя не существует");
-
-            if (user.IsDeleted || user.IsBanned)
-                return Error.BadRequest("Пользователь удален или заблокирован");
-            
-            if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
-                return Error.BadRequest("Неверный пароль");
-
-            user.PasswordHash = passwordHasher.Hash(newPassword);
-            user.PasswordChangeDate = DateTime.Now;
-            
             return Result.Success();
         }
 

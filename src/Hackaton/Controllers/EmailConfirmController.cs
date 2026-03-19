@@ -7,7 +7,6 @@ using Web.Extensions;
 
 namespace Web.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [Produces(typeof(Result))]
     public class EmailConfirmController(IEmailConfirmService emailConfirmService) : ControllerBase

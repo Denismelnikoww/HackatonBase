@@ -27,7 +27,7 @@ namespace Web.Extensions
 
             services.AddScoped<IMistralService, MistralService>();
 
-            services.AddScoped<IResetPasswordService, ResetPasswordService>();
+            services.AddScoped<IResetPasswordByEmailService, ResetPasswordByEmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService,UserService>();
 

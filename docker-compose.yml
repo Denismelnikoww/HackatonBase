@@ -70,6 +70,8 @@ services:
       - mistral_api_key
     ports:
       - "5000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/health/live"]
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80

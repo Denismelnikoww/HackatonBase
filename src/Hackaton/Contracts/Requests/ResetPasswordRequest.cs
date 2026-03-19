@@ -1,7 +1,14 @@
-namespace API.Contracts.Requests;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class ResetPasswordRequest
+namespace API.Contracts.Requests
 {
-    // public string OldPassword { get; set; }
-    public string OldPassword { get; set; }
+    public class ResetPasswordRequest
+    {
+        [Required]
+        public string EmailId { get; set; }
+
+        [Required]
+        [MinLength(8, ErrorMessage = "Пароль должен быть не короче 8 символов")]
+        public string Password { get; set; }
+    }
 }

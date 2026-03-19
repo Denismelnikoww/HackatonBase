@@ -38,22 +38,28 @@ namespace Hackaton
                 options.AddPolicy("AllowSpecificOrigin",
                     policy =>
                     {
-                        policy.WithOrigins("https://localhost:7225/swagger/index.html")
-                              .AllowCredentials()
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
+                        policy.WithOrigins("http://localhost:5173", "http://localhost:5000",
+                            "http://192.168.31.223:5273", "http://192.168.31.159:7225")
+                        .AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                     });
             });
 
-
             var app = builder.Build();
 
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
+            app.UseMiddleware<OptionsMiddleware>();
 
             app.UseCors("AllowSpecificOrigin");
 
+            app.UseRouting();
+
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
+
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseHangfireDashboard(builder.Environment.IsProduction());
 
             //if (builder.Environment.IsProduction())
             //    app.UseMiddleware<SwaggerAccessMiddleware>();
@@ -66,11 +72,10 @@ namespace Hackaton
             app.MapControllers();
             app.MapDefaultControllerRoute();
 
-            app.UseCoreAdminCustomTitle("Shkets");
+            app.UseCoreAdminCustomTitle("Shkets Admin");
+            app.UseCoreAdminCustomUrl("admin");
 
             app.ApplyMigrations();
-
-            app.UseHangfireDashboard(builder.Environment.IsProduction());
 
             app.Run();
         }

@@ -10,7 +10,7 @@
 
         public int MaxRetryAttempts { get; set; } = 3;
         public int TimeoutSeconds { get; set; } = 60;
+        public bool UsePortAndSsl { get; set; } = false;
         public int RetryDelaySeconds { get; set; } = 5;
-        public bool UseSsl { get; set; } = true;
     }
 }

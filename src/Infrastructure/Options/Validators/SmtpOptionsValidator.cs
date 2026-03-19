@@ -17,9 +17,12 @@ namespace Infrastructure.Options.Validators
             if (string.IsNullOrWhiteSpace(options.Password))
                 errors.Add("Password для SMTP обязателен");
 
-            if (options.Port <= 0 || options.Port > 65535)
-                errors.Add("Port должен быть в диапазоне 1-65535");
-            
+            if (options.UsePortAndSsl)
+            {
+                if (options.Port <= 0 || options.Port > 65535)
+                    errors.Add("Port должен быть в диапазоне 1-65535");
+            }
+
             if (options.MaxRetryAttempts < 0)
                 errors.Add("MaxRetryAttempts не может быть отрицательным");
 

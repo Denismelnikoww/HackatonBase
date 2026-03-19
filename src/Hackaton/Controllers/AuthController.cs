@@ -13,7 +13,6 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Produces(typeof(Result))]
     public class AuthController(IAuthService authService,
         IOptions<JwtOptions> options,
         IJwtProvider jwtProvider) : ControllerBase
@@ -21,18 +20,15 @@ namespace API.Controllers
         private readonly JwtOptions _options = options.Value;
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
+        public async Task<Result> Login([FromBody] LoginRequest request, CancellationToken ct)
         {
             var result = await authService.Login(request.Login,
                 request.Password, ct);
 
-            if (result.IsFailure)
-                return result.ToResponse();
-
             var tokens = result.Value;
             SetTokens(tokens.AccessToken, tokens.RefreshToken);
 
-            return Result.Success().ToResponse();
+            return Ok();
         }
 
         [HttpPost("[action]")]
@@ -46,18 +42,19 @@ namespace API.Controllers
 
             DeleteTokens();
 
-            return result.ToResponse();
+            return Ok();
         }
 
         [HttpPost("[action]")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
-            return await authService.Register(request.Name,
-                request.Login,
-                request.Password,
-                request.Email,
-                ct)
-                .ToResponseAsync();
+            await authService.Register(request.Name,
+               request.Login,
+               request.Password,
+               request.Email,
+               ct);
+
+            return Ok();
         }
 
         [HttpPost("[action]")]
@@ -66,7 +63,7 @@ namespace API.Controllers
             var refreshToken = Request.Cookies[_options.RefreshCookieName];
 
             if (string.IsNullOrEmpty(refreshToken))
-                return Result.Failure(Error.Unauthorized("Отсутсвует рефреш токен")).ToResponse();
+                return BadRequest("Отсутсвует рефреш токен");
 
             var principal = jwtProvider.ValidateRefreshToken(refreshToken);
             if (principal == null)
@@ -86,29 +83,22 @@ namespace API.Controllers
             return result.ToResponse();
         }
 
-        [HttpPost("[action]")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct )
-        {
-            
-            return Ok();
-        }
-
         private void SetTokens(string accessToken, string refreshToken)
         {
             Response.Cookies.Append(_options.AccessCookieName, accessToken, new CookieOptions
             {
                 IsEssential = true,
-                Secure = true,
+                //Secure = true,
                 HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
+                //SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
             });
             Response.Cookies.Append(_options.RefreshCookieName, refreshToken, new CookieOptions
             {
                 IsEssential = true,
-                Secure = true,
+                //Secure = true,
                 HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
+                //SameSite = SameSiteMode.Strict,
                 MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
             });
         }
