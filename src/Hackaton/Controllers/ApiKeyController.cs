@@ -27,13 +27,11 @@ namespace Web.Controllers
 
         /// <summary>
         /// Отзывает (удаляет) существующий API-ключ.
-        /// Доступ разрешен только Администраторам
-        /// </summary>
-        /// <param name="id">Идентификатор API-ключа для отзыва</param>
-        /// <remarks>
         /// Метод всегда возвращает успешный ответ, даже если ключ не существовал.
         /// Это сделано в целях безопасности, чтобы не раскрывать информацию о существовании ключей.
-        /// </remarks>
+        /// Доступ разрешен только Администраторам.
+        /// </summary>
+        /// <param name="id">Идентификатор API-ключа для отзыва</param>
         [HttpGet("[action]")]
         public async Task<IActionResult> Revoke([FromQuery] Guid id, CancellationToken ct)
         {
@@ -43,6 +41,7 @@ namespace Web.Controllers
 
         /// <summary>
         /// Получает список всех API-ключей текущего пользователя
+        /// Доступ разрешен только Администраторам
         /// </summary>
         [HttpGet("[action]")]
         [Produces(typeof(IEnumerable<ApiKeyDto>))]
