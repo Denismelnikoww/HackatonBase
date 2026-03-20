@@ -13,7 +13,7 @@ namespace Web.Controllers
     /// </summary>
     [Authorize(Roles = nameof(Role.Admin))]
     [Route("[controller]")]
-    public class ApiKeyController(IApiService apiService) : ControllerBase
+    public class ApiKeyController(IApiKeyService apiKeyService) : ControllerBase
     {
         /// <summary>
         /// Генерирует новый API-ключ для текущего пользователя
@@ -22,7 +22,7 @@ namespace Web.Controllers
         [HttpGet("[action]")]
         [Produces(typeof(ApiKeyDto))]
         public async Task<IActionResult> Generate([FromQuery] string name, CancellationToken ct)
-            => Ok(await apiService.Generate(name, User.GetUserId(), ct));
+            => Ok(await apiKeyService.Generate(name, User.GetUserId(), ct));
 
         /// <summary>
         /// Отзывает (удаляет) существующий API-ключ
@@ -35,7 +35,7 @@ namespace Web.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> Revoke([FromQuery] Guid id, CancellationToken ct)
         {
-            apiService.Revoke(id, User.GetUserId(), ct);
+            await apiKeyService.Revoke(id, User.GetUserId(), ct);
             return Ok("Если вы обладали данным ключом, то он отозван");
         }
 
@@ -45,6 +45,6 @@ namespace Web.Controllers
         [HttpGet("[action]")]
         [Produces(typeof(IEnumerable<ApiKeyDto>))]
         public async Task<IActionResult> List(CancellationToken ct)
-            => Ok(await apiService.GetKeys(User.GetUserId(), ct));
+            => Ok(await apiKeyService.GetKeys(User.GetUserId(), ct));
     }
 }

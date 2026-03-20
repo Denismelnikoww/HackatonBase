@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services.Internal;
 
-public class ApiService(AppDbContext context) : IApiService
+public class ApiKeyService(AppDbContext context) : IApiKeyService
 {
     public async Task<ApiKeyDto> Generate(string name, Guid userId, CancellationToken ct)
     {
@@ -25,6 +25,19 @@ public class ApiService(AppDbContext context) : IApiService
             Value = key.Value,
             Name = name
         };
+    }
+
+    public async Task<bool> Validate(string apiKey, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(apiKey)) return false;
+
+        var key = await context.ApiKeys.AsNoTracking()
+            .Where(a => a.Value == apiKey
+                        && !a.IsRevoked && !a.IsDeleted)
+            .FirstOrDefaultAsync(ct);
+
+        if (key == null) return false;
+        return true;
     }
 
     public async Task Revoke(Guid id, Guid userid, CancellationToken ct)

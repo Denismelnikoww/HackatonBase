@@ -14,7 +14,7 @@ public class QrService(
         var guid = Guid.NewGuid();
 
         redisCacheService.SetAsync(guid.ToString(),
-            userId.ToString(),
+            userId,
             TimeSpan.FromSeconds(qrOptions.Value.ExpirationSeconds),
             ct);
         

@@ -39,16 +39,17 @@ namespace Hackaton
                 options.AddPolicy("AllowSpecificOrigin",
                     policy =>
                     {
-                        policy.WithOrigins("http://localhost:5173", "http://localhost:5000",
-                            "http://192.168.31.223:5273", "http://192.168.31.159:7225")
-                        .AllowCredentials()
-                        .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        policy.WithOrigins("https://shkets.ru",
+                                "http://localhost:5173", "http://localhost:5000",
+                                "http://192.168.31.223:5273", "http://192.168.31.159:7225")
+                            .AllowCredentials()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
                     });
             });
 
             var app = builder.Build();
-            
+
             app.UseMiddleware<OptionsMiddleware>();
 
             app.UseCors("AllowSpecificOrigin");

@@ -9,26 +9,24 @@ secrets:
     file: ./secrets/email.txt
   email_password:
     file: ./secrets/email_password.txt
-  mistral_api_key:
-    file: ./secrets/mistral_api_key.txt
 
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: hackaton-postgres-dev
+    container_name: hackaton-postgres
     restart: unless-stopped
     secrets:
       - db_password
     environment:
-      POSTGRES_DB: hackaton 
+      POSTGRES_DB: hackaton
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     ports:
-      - "5434:5432" 
+      - "5432:5432"
     volumes:
-      - postgres-data-dev:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     networks:
-      - hackaton-network-dev
+      - hackaton-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -37,28 +35,27 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: hackaton-redis-dev
+    container_name: hackaton-redis
     restart: unless-stopped
     secrets:
       - redis_password
     command: >
       sh -c "redis-server --requirepass $$(cat /run/secrets/redis_password)"
     ports:
-      - "6381:6379"  
+      - "6379:6379"
     volumes:
-      - redis-data-dev:/data
+      - redis-data:/data
     networks:
-      - hackaton-network-dev
+      - hackaton-network
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "$$(cat /run/secrets/redis_password)", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
   backend:
-    build:
-      context: .
-      dockerfile: src/Hackaton/Dockerfile.dev  
-    container_name: hackaton-backend-dev
+    image: podsolnuhhh/hackaton:latest    
+    container_name: hackaton-backend
     restart: unless-stopped
     secrets:
       - db_password
@@ -66,11 +63,12 @@ services:
       - redis_password
       - email
       - email_password
-      - mistral_api_key
     ports:
-      - "5001:80" 
+      - "5000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/api/health/live"]
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
       
     depends_on:
@@ -79,23 +77,15 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - hackaton-network-dev
+      - hackaton-network
     volumes:
-      - ./src:/src
       - ./src/Hackaton/Logs:/app/Logs
-      - ./src/Hackaton/appsettings.json:/app/appsettings.json
-      - ./src/Resources:/app/Resources
-      - /src/Hackaton/bin
-      - /src/Hackaton/obj
-    cap_add:
-      - SYS_PTRACE
-    security_opt:
-      - seccomp:unconfined
+      - ./src/Resources:/app/Resources 
 
 networks:
-  hackaton-network-dev:
+  hackaton-network:
     driver: bridge
 
 volumes:
-  postgres-data-dev:
-  redis-data-dev:
+  postgres-data:
+  redis-data:

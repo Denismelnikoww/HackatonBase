@@ -26,7 +26,7 @@ namespace Web.Extensions
             services.AddScoped<IResetPasswordByEmailService, ResetPasswordByEmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IApiService, ApiService>();
+            services.AddScoped<IApiKeyService, ApiKeyService>();
             services.AddScoped<IQrService, QrService>();
 
             return services;
