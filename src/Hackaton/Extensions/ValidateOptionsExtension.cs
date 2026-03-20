@@ -54,7 +54,7 @@ namespace Web.Extensions
                 .ValidateOnStart();
 
             services.AddOptions<VerificationOptions>()
-                .Bind(configuration.GetSection("VerificationCacheOptions"))
+                .Bind(configuration.GetSection("VerificationOptions"))
                 .ValidateOnStart();
 
             services.AddOptions<ConnectionStringsOptions>()
@@ -80,7 +80,7 @@ namespace Web.Extensions
             builder.Services.AddSingleton<IValidateOptions<SmtpOptions>, SmtpOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<EmailTemplateOptions>, EmailTemplateOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<LoggingOptions>, LoggingOptionsValidator>();
-            builder.Services.AddSingleton<IValidateOptions<VerificationOptions>, VerificationCacheOptionsValidator>();
+            builder.Services.AddSingleton<IValidateOptions<VerificationOptions>, VerificationOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<ConnectionStringsOptions>, ConnectionStringsOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<MistralOptions>, MistralOptionsValidator>();
 

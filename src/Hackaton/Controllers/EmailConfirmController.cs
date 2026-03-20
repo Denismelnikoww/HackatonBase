@@ -1,7 +1,6 @@
 ﻿using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ResultSharp.HttpResult;
 using Web.Extensions;
 
 namespace Web.Controllers

@@ -12,7 +12,7 @@ namespace Application.Services
         IEmailTemplateBuilder emailTemplateBuilder,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
-        UserDbContext context) : IResetPasswordService
+        AppDbContext context) : IResetPasswordService
     {
         private readonly VerificationOptions _options = options.Value;
 

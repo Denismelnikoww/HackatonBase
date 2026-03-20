@@ -3,7 +3,7 @@
 namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class HealthController : ControllerBase
     {
         [HttpGet("[action]")]

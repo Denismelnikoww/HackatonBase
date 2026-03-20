@@ -1,4 +1,4 @@
-﻿using Domain.Models.User;
+﻿using Domain.Models;
 
 namespace Application.DTO
 {

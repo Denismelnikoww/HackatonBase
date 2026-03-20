@@ -5,7 +5,6 @@ using Infrastructure.BackgroundJobs.Jobs;
 using Infrastructure.BackgroundJobs.Jobs.Interfaces;
 using Infrastructure.Email;
 using Infrastructure.Interfaces;
-using Infrastructure.Mistral;
 using Infrastructure.Services;
 
 namespace Web.Extensions
@@ -22,8 +21,6 @@ namespace Web.Extensions
             services.AddScoped<IEmailTemplateBuilder, EmailTemplateBuilder>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailConfirmService, EmailConfirmService>();
-
-            services.AddScoped<IMistralService, MistralService>();
 
             services.AddScoped<IResetPasswordByEmailService, ResetPasswordByEmailService>();
             services.AddScoped<IAuthService, AuthService>();

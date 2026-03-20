@@ -5,7 +5,6 @@ using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using ResultSharp.Errors;
 
 namespace Application.Services
 {
@@ -15,7 +14,7 @@ namespace Application.Services
         IEmailTemplateBuilder emailTemplateBuilder,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
-        UserDbContext context) : IEmailConfirmService
+        AppDbContext context) : IEmailConfirmService
     {
         private readonly VerificationOptions _options = options.Value;
 

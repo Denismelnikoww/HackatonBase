@@ -12,7 +12,7 @@ namespace Web.Extensions
             var connectionString = builder.Services.BuildServiceProvider()
               .GetRequiredService<IOptions<ConnectionStringsOptions>>().Value;
 
-            builder.Services.AddDbContext<UserDbContext>(options =>
+            builder.Services.AddDbContext<AppDbContext>(options =>
                  options.UseNpgsql(
                    connectionString.DatabaseConnectionString,
                      npgsqlOptions =>

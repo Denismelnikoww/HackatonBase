@@ -1,4 +1,4 @@
-﻿using Domain.Models.User;
+﻿using Domain.Models;
 using Infrastructure.Interfaces;
 using Infrastructure.Options;
 using Microsoft.Extensions.Options;

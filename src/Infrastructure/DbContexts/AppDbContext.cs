@@ -1,24 +1,28 @@
-﻿using Domain.Models.User;
+﻿using Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Infrastructure.DbContexts
 {
-    public class UserDbContext : DbContext
+    public class AppDbContext : DbContext
     {
-        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) { }
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Session> UserSessions { get; set; }
         public DbSet<Token> UserTokens { get; set; }
+        public DbSet<Terminal> Terminals { get; set; }
+        public DbSet<Entry> Entries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasDefaultSchema("users");
+            modelBuilder.HasDefaultSchema("hackaton");
 
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new SessionConfiguration());
             modelBuilder.ApplyConfiguration(new TokenConfiguration());
+            modelBuilder.ApplyConfiguration(new TerminalConfiguration());
+            modelBuilder.ApplyConfiguration(new EntryConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
@@ -36,6 +40,11 @@ namespace Infrastructure.DbContexts
                     .ValueGeneratedNever();
 
                 builder.Property(x => x.Login)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("varchar(50)");
+
+                builder.Property(x => x.Name)
                     .IsRequired()
                     .HasMaxLength(50)
                     .HasColumnType("varchar(50)");
@@ -87,6 +96,7 @@ namespace Infrastructure.DbContexts
                 builder.ToTable("sessions");
 
                 builder.HasKey(x => x.Id);
+
                 builder.Property(x => x.Id)
                     .HasColumnType("uuid")
                     .ValueGeneratedNever();
@@ -113,9 +123,6 @@ namespace Infrastructure.DbContexts
                 builder.Property(x => x.IsActive)
                     .HasDefaultValue(true);
 
-                builder.Property(x => x.IsDeleted)
-                    .HasDefaultValue(false);
-
                 builder.HasOne(x => x.User)
                     .WithMany(u => u.Sessions)
                     .HasForeignKey(x => x.UserId)
@@ -123,18 +130,14 @@ namespace Infrastructure.DbContexts
 
                 builder.HasOne(x => x.Token)
                     .WithOne(t => t.Session)
-                    .HasForeignKey<Session>(x => x.TokenId)
+                    .HasForeignKey<Token>(x => x.SessionId)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 builder.HasIndex(x => x.UserId)
                     .HasDatabaseName("IX_Sessions_UserId");
 
-                builder.HasIndex(x => x.TokenId)
-                    .IsUnique()
-                    .HasDatabaseName("IX_Sessions_TokenId");
-
                 builder.HasIndex(x => new { x.LastActivity })
-                    .HasDatabaseName("IX_Sessions_ActiveUser");
+                    .HasDatabaseName("IX_Sessions_LastActivity");
             }
         }
 
@@ -145,6 +148,7 @@ namespace Infrastructure.DbContexts
                 builder.ToTable("tokens");
 
                 builder.HasKey(x => x.Id);
+
                 builder.Property(x => x.Id)
                     .HasColumnType("uuid")
                     .ValueGeneratedNever();
@@ -165,12 +169,82 @@ namespace Infrastructure.DbContexts
                 builder.Property(x => x.IsRevoked)
                     .HasDefaultValue(false);
 
-                builder.Property(x => x.IsDeleted)
-                    .HasDefaultValue(false);
+                builder.HasOne(x => x.Session)
+                    .WithOne(s => s.Token)
+                    .HasForeignKey<Token>(x => x.SessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 builder.HasIndex(x => x.RefreshToken)
                     .IsUnique()
                     .HasDatabaseName("IX_Tokens_RefreshToken");
+
+                builder.HasIndex(x => x.SessionId)
+                    .IsUnique()
+                    .HasDatabaseName("IX_Tokens_SessionId");
+            }
+        }
+
+        public class TerminalConfiguration : IEntityTypeConfiguration<Terminal>
+        {
+            public void Configure(EntityTypeBuilder<Terminal> builder)
+            {
+                builder.ToTable("terminals");
+
+                builder.HasKey(x => x.Id);
+
+                builder.Property(x => x.Id)
+                    .HasColumnType("uuid")
+                    .ValueGeneratedNever();
+
+                builder.Property(x => x.Name)
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("varchar(100)");
+
+                builder.Property(x => x.IsDeleted)
+                    .HasDefaultValue(false);
+            }
+        }
+
+        public class EntryConfiguration : IEntityTypeConfiguration<Entry>
+        {
+            public void Configure(EntityTypeBuilder<Entry> builder)
+            {
+                builder.ToTable("entries");
+
+                builder.HasKey(x => x.Id);
+
+                builder.Property(x => x.Id)
+                    .HasColumnType("uuid")
+                    .ValueGeneratedNever();
+
+                builder.Property(x => x.Time)
+                    .IsRequired()
+                    .HasColumnType("timestamp with time zone");
+
+                builder.Property(x => x.UserId)
+                    .IsRequired()
+                    .HasColumnType("uuid");
+
+                builder.Property(x => x.TerminalId)
+                    .IsRequired()
+                    .HasColumnType("uuid");
+
+                builder.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                builder.HasOne(x => x.Terminal)
+                    .WithMany()
+                    .HasForeignKey(x => x.TerminalId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                builder.HasIndex(x => x.UserId)
+                    .HasDatabaseName("IX_Entries_UserId");
+
+                builder.HasIndex(x => x.TerminalId)
+                    .HasDatabaseName("IX_Entries_TerminalId");
             }
         }
     }

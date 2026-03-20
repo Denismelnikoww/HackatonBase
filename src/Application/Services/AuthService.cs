@@ -1,7 +1,7 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
 using Domain.Exceptions;
-using Domain.Models.User;
+using Domain.Models;
 using Infrastructure.DbContexts;
 using Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Application.Services
 {
     public class AuthService(
-        UserDbContext context,
+        AppDbContext context,
         IJwtProvider jwtProvider,
         IPasswordHasher passwordHasher) : IAuthService
     {

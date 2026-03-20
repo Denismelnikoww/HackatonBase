@@ -1,6 +1,6 @@
 ﻿using Domain.Models.Common;
 
-namespace Domain.Models.User
+namespace Domain.Models
 {
     public class User : IEntity
     {
@@ -20,6 +20,7 @@ namespace Domain.Models.User
         public bool IsBanned { get; set; } = false;
 
         public virtual ICollection<Session> Sessions { get; set; }
+        public virtual ICollection<Terminal> TerminalsAccess { get; set; }
 
         public void ConfirmEmail()
         {

@@ -1,4 +1,4 @@
-﻿using Domain.Models.User;
+﻿using Domain.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

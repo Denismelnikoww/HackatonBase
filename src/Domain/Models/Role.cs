@@ -1,4 +1,4 @@
-﻿namespace Domain.Models.User
+﻿namespace Domain.Models
 {
     public enum Role
     {

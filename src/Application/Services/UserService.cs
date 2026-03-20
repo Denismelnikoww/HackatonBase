@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
 {
-    public class UserService(UserDbContext context) : IUserService
+    public class UserService(AppDbContext context) : IUserService
     {
         public async Task<UserInfo?> GetInfo(Guid userId, CancellationToken ct = default)
         {

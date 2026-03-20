@@ -1,8 +1,8 @@
 ﻿using Domain.Models.Common;
 
-namespace Domain.Models.User
+namespace Domain.Models
 {
-    public class Session : IEntity
+    public class Session : IIdEntity
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public Guid TokenId { get; set; }
@@ -13,7 +13,6 @@ namespace Domain.Models.User
         public DateTime? LogoutDate { get; set; }
 
         public bool IsActive { get; set; } = true;
-        public bool IsDeleted { get; set; } = false;
 
         public virtual User User { get; set; }
         public virtual Token Token { get; set; }

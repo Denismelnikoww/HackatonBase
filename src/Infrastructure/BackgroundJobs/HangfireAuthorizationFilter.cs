@@ -1,4 +1,4 @@
-﻿using Domain.Models.User;
+﻿using Domain.Models;
 using Hangfire.Dashboard;
 
 namespace Infrastructure.BackgroundJobs
