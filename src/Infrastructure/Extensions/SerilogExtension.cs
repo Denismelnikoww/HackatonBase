@@ -12,7 +12,7 @@ namespace Infrastructure.Extensions
         {
             hostBuilder.UseSerilog((context, config) =>
             {
-                var options = context.Configuration.GetSection("LoggingSettings").Get<LoggingOptions>();
+                var options = context.Configuration.GetSection("LoggingOptions").Get<LoggingOptions>();
 
                 options ??= new LoggingOptions();
 
@@ -34,7 +34,7 @@ namespace Infrastructure.Extensions
                         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
                     );
                 }
-
+                
                 config.Enrich.FromLogContext();
             });
 

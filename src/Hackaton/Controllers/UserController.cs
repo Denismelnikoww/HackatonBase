@@ -13,10 +13,7 @@ namespace API.Controllers
         [HttpGet("[action]/{id}")]
         [Produces(typeof(UserInfo))]
         public async Task<IActionResult> Info(Guid id, CancellationToken ct)
-        {
-            await userService.GetInfo(id, ct);
-            return Ok();
-        }
+            => Ok(await userService.GetInfo(id, ct));
 
         /// <summary>
         /// Требует авторизации
@@ -26,9 +23,6 @@ namespace API.Controllers
         [Produces(typeof(UserInfo))]
         [ProducesResponseType(401)]
         public async Task<IActionResult> Info(CancellationToken ct)
-        {
-            await userService.GetInfo(User.GetUserId(), ct);
-            return Ok();
-        }
+            => Ok(await userService.GetInfo(User.GetUserId(), ct));
     }
 }

@@ -48,7 +48,7 @@ namespace Hackaton
             });
 
             var app = builder.Build();
-
+            
             app.UseMiddleware<OptionsMiddleware>();
 
             app.UseCors("AllowSpecificOrigin");

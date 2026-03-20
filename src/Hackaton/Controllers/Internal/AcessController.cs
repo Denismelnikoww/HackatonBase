@@ -10,6 +10,7 @@ namespace Web.Controllers.Internal
         {
             [Authorize]
             [HttpGet("[action]")]
+            // [Produces()]
             public IActionResult Validate()
             {
                 return Ok();

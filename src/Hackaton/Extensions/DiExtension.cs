@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces;
 using Application.Services;
+using Application.Services.Internal;
 using Infrastructure.Auth;
 using Infrastructure.BackgroundJobs.Jobs;
 using Infrastructure.BackgroundJobs.Jobs.Interfaces;
@@ -24,8 +25,9 @@ namespace Web.Extensions
 
             services.AddScoped<IResetPasswordByEmailService, ResetPasswordByEmailService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IUserService,UserService>();
-
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IApiService, ApiService>();
+            services.AddScoped<IQrService, QrService>();
 
             return services;
         }
@@ -36,6 +38,5 @@ namespace Web.Extensions
 
             return services;
         }
-
     }
 }

@@ -11,6 +11,7 @@ namespace Infrastructure.DbContexts
         public DbSet<User> Users { get; set; }
         public DbSet<Session> UserSessions { get; set; }
         public DbSet<Token> UserTokens { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<Terminal> Terminals { get; set; }
         public DbSet<Entry> Entries { get; set; }
 
@@ -23,8 +24,46 @@ namespace Infrastructure.DbContexts
             modelBuilder.ApplyConfiguration(new TokenConfiguration());
             modelBuilder.ApplyConfiguration(new TerminalConfiguration());
             modelBuilder.ApplyConfiguration(new EntryConfiguration());
+            modelBuilder.ApplyConfiguration(new ApiKeyConfiguration());
 
             base.OnModelCreating(modelBuilder);
+        }
+
+
+        public class ApiKeyConfiguration : IEntityTypeConfiguration<ApiKey>
+        {
+            public void Configure(EntityTypeBuilder<ApiKey> builder)
+            {
+                builder.ToTable("api_keys");
+
+                builder.HasKey(x => x.Id);
+
+                builder.Property(x => x.Id)
+                    .HasColumnType("uuid")
+                    .ValueGeneratedNever();
+
+                builder.Property(x => x.Name)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("varchar(50)");
+                
+                builder.Property(x => x.Value)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("varchar(50)");
+             
+                builder.Property(x => x.IsRevoked)
+                    .HasDefaultValue(false);
+                
+                builder.Property(x => x.IsDeleted)
+                    .HasDefaultValue(false);
+                
+                builder.Property(x => x.UserId)
+                    .IsRequired()
+                    .HasColumnType("uuid");
+
+                builder.HasOne(x => x.User);
+            }
         }
 
         public class UserConfiguration : IEntityTypeConfiguration<User>

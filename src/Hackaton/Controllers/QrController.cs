@@ -1,16 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Web.Extensions;
 
 namespace Web.Controllers
 {
     [Route("api/[controller]")]
-    public class QrController : ControllerBase
+    public class QrController(IQrService qrService) : ControllerBase
     {
         [Authorize]
+        [Produces(typeof(Guid))]
         [HttpGet("[action]")]
-        public IActionResult Generate()
-        {
-            return Ok();
-        }
+        public IActionResult Generate(CancellationToken ct)
+            => Ok(qrService.Generate(User.GetUserId()));
     }
 }
