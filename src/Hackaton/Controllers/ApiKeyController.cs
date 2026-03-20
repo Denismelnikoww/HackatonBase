@@ -16,7 +16,8 @@ namespace Web.Controllers
     public class ApiKeyController(IApiKeyService apiKeyService) : ControllerBase
     {
         /// <summary>
-        /// Генерирует новый API-ключ для текущего пользователя
+        /// Генерирует новый API-ключ для текущего пользователя.
+        /// Доступ разрешен только Администраторам
         /// </summary>
         /// <param name="name">Название (назначение) API-ключа</param>
         [HttpGet("[action]")]
@@ -25,7 +26,8 @@ namespace Web.Controllers
             => Ok(await apiKeyService.Generate(name, User.GetUserId(), ct));
 
         /// <summary>
-        /// Отзывает (удаляет) существующий API-ключ
+        /// Отзывает (удаляет) существующий API-ключ.
+        /// Доступ разрешен только Администраторам
         /// </summary>
         /// <param name="id">Идентификатор API-ключа для отзыва</param>
         /// <remarks>

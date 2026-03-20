@@ -5,6 +5,10 @@ using Web.Extensions;
 
 namespace Web.Controllers
 {
+#if RELEASE
+    [ApiExplorerSettings(IgnoreApi = true)] 
+#endif
+    
     [Route("api/[controller]")]
     public class QrController(IQrService qrService) : ControllerBase
     {

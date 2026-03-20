@@ -57,6 +57,7 @@ namespace Hackaton
             app.UseRouting();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

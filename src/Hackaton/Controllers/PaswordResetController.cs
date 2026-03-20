@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers
 {
+#if RELEASE
+    [ApiExplorerSettings(IgnoreApi = true)] 
+#endif
+    
     [Route("api/[controller]")]
     public class PaswordResetController(
         IResetPasswordByEmailService resetPasswordService) : ControllerBase

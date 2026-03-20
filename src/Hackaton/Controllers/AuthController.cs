@@ -10,7 +10,8 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController(IAuthService authService,
+    public class AuthController(
+        IAuthService authService,
         IOptions<JwtOptions> options,
         IJwtProvider jwtProvider) : ControllerBase
     {
@@ -45,10 +46,10 @@ namespace API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
         {
             await authService.Register(request.Name,
-               request.Login,
-               request.Password,
-               request.Email,
-               ct);
+                request.Login,
+                request.Password,
+                request.Email,
+                ct);
 
             return Ok();
         }

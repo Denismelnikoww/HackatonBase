@@ -1,6 +1,4 @@
 using Application.Interfaces;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
 
 namespace Web.Middlewares;
 
