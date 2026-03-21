@@ -28,6 +28,7 @@ namespace Web.Extensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IApiKeyService, ApiKeyService>();
             services.AddScoped<IQrService, QrService>();
+            services.AddScoped<IImportService, ImportService>();
 
             return services;
         }
