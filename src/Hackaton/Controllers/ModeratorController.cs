@@ -26,18 +26,13 @@ public class ModeratorController(IModeratorService moderatorService) : Controlle
     public async Task<IActionResult> Users([FromQuery] PagedRequest request, CancellationToken ct)
         => Ok(await moderatorService.GetUsers(request.Take, request.Skip, ct));
 
-    [HttpPatch("[action]")]
-    public async Task<IActionResult> ChangeAccess([FromQuery] Guid userId, CancellationToken ct)
-    {
-        await moderatorService.ChangeAccess(userId, ct);
-        return Ok();
-    }
 
     [HttpPatch("[action]")]
-    public async Task<IActionResult> SetTernimalsAccess([FromBody] AddTernimalsAccessRequest request,
+    public async Task<IActionResult> SetAccessSettings([FromBody] AccessSetingsRequest setingsRequest,
         CancellationToken ct)
     {
-        await moderatorService.SetTerminals(request.Terminals, request.UserId, ct);
+        await moderatorService.SetAccessSettings(setingsRequest.Terminals, setingsRequest.UserId,
+            setingsRequest.EntryAccess, ct);
         return Ok();
     }
 

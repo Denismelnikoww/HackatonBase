@@ -11,28 +11,34 @@ public class ModeratorService(AppDbContext context) : IModeratorService
 {
     public async Task<UserWithTerminalsDto> GetUser(Guid userId, CancellationToken ct = default)
     {
-        var user = await context.Users.AsNoTracking()
-            .Where(x => x.Id == userId && !x.EntryAccess && x.Role == Role.User)
+        var user = await context.Users
+            .AsNoTracking()
+            .Where(x => x.Id == userId && !x.IsDeleted && x.Role == Role.User)
             .Select(x => new UserWithTerminalsDto
             {
                 Id = x.Id,
                 EntryAccess = x.EntryAccess,
-                Terminals = x.TerminalsAccess.Select(t => t.Id)
+                Terminals = x.TerminalsAccess.Select(ta => ta.TerminalId) // Исправлено: берем TerminalId из связной таблицы
             })
             .FirstOrDefaultAsync(ct);
 
-        if (user == null) throw new BadRequestException("Пользователя не существует");
+        if (user == null) 
+            throw new BadRequestException("Пользователя не существует или он удален");
+        
         return user;
     }
 
     public async Task<PagedResult<UserSmallDto>> GetUsers(int take, int skip, CancellationToken ct = default)
     {
-        var count = await context.Users.AsNoTracking()
+        var count = await context.Users
+            .AsNoTracking()
             .Where(x => !x.IsDeleted && x.Role == Role.User)
             .CountAsync(ct);
 
-        var users = await context.Users.AsNoTracking()
+        var users = await context.Users
+            .AsNoTracking()
             .Where(x => !x.IsDeleted && x.Role == Role.User)
+            .OrderBy(x => x.Name) 
             .Skip(skip)
             .Take(take)
             .Select(x => new UserSmallDto
@@ -53,38 +59,62 @@ public class ModeratorService(AppDbContext context) : IModeratorService
         };
     }
 
-    public async Task ChangeAccess(Guid userId, CancellationToken ct = default)
-        => await context.Users
-            .Where(x => x.Id == userId)
-            .ExecuteUpdateAsync(setter => setter
-                .SetProperty(u => u.EntryAccess, u => !u.EntryAccess), ct);
-
-    public async Task SetTerminals(IEnumerable<Guid> terminalId, Guid userId, CancellationToken ct = default)
+    public async Task SetAccessSettings(IEnumerable<Guid> terminalIds, Guid userId, bool entryAccess,
+        CancellationToken ct = default)
     {
         var user = await context.Users
-            .Where(x => x.Id == userId)
-            .FirstOrDefaultAsync(ct);
+            .Include(x => x.TerminalsAccess)
+            .FirstOrDefaultAsync(x => x.Id == userId, ct);
 
-        if (user == null) throw new NotFoundException("Пользователя не существует");
+        if (user == null) 
+            throw new NotFoundException("Пользователя не существует или он был забанен");
 
-        var terminals = await context.Terminals.AsNoTracking()
-            .Where(x => terminalId.Contains(x.Id))
+        if (user.IsDeleted)
+            throw new BadRequestException("Пользователь удален");
+
+        var terminalIdsList = terminalIds.Distinct().ToList();
+        
+        var existingTerminals = await context.Terminals
+            .Where(x => terminalIdsList.Contains(x.Id) && !x.IsDeleted)
+            .Select(x => x.Id)
             .ToListAsync(ct);
 
-        if (terminals.Count == 0) throw new NotFoundException("Ни один из выбранных терминалов не существует");
+        if (existingTerminals.Count != terminalIdsList.Count)
+            throw new NotFoundException("Некоторые терминалы не найдены или удалены");
 
-        user.TerminalsAccess = terminals;
+        user.TerminalsAccess.Clear();
+        
+        foreach (var terminalId in existingTerminals)
+        {
+            user.TerminalsAccess.Add(new UserTerminalAccess
+            {
+                UserId = userId,
+                TerminalId = terminalId
+            });
+        }
+        
+        user.EntryAccess = entryAccess;
+        
+        await context.SaveChangesAsync(ct);
     }
 
     public async Task<PagedResult<TerminalDto>> GetTerminals(Guid userId, int take, int skip,
         CancellationToken ct = default)
     {
-        var userTerminalIds = await context.Users
-            .Where(u => u.Id == userId)
-            .SelectMany(u => u.TerminalsAccess.Select(t => t.Id))
+        var userTerminalIds = await context.UserTerminalAccess
+            .AsNoTracking()
+            .Where(uta => uta.UserId == userId)
+            .Select(uta => uta.TerminalId)
             .ToListAsync(ct);
 
-        var terminals = await context.Terminals.AsNoTracking()
+        var totalCount = await context.Terminals
+            .AsNoTracking()
+            .Where(t => !t.IsDeleted)
+            .CountAsync(ct);
+
+        var terminals = await context.Terminals
+            .AsNoTracking()
+            .Where(t => !t.IsDeleted)
             .OrderBy(t => t.Name)
             .Skip(skip)
             .Take(take)
@@ -92,18 +122,16 @@ public class ModeratorService(AppDbContext context) : IModeratorService
             {
                 Id = t.Id,
                 Name = t.Name,
-                Access = userTerminalIds.Contains(t.Id) 
+                EntryAccess = userTerminalIds.Contains(t.Id)
             })
             .ToListAsync(ct);
-
-        var count = await context.Terminals.AsNoTracking().CountAsync(ct);
 
         return new PagedResult<TerminalDto>
         {
             Items = terminals,
             Skip = skip,
             Take = take,
-            Total = count
+            Total = totalCount
         };
     }
 }

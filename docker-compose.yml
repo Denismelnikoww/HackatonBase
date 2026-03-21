@@ -9,8 +9,6 @@ secrets:
     file: ./secrets/email.txt
   email_password:
     file: ./secrets/email_password.txt
-  mistral_api_key:
-    file: ./secrets/mistral_api_key.txt
 
 services:
   postgres:
@@ -67,11 +65,12 @@ services:
       - redis_password
       - email
       - email_password
-      - mistral_api_key
     ports:
       - "5000:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/api/health/live"]
+    env_file:
+      .env  
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
@@ -85,7 +84,6 @@ services:
       - hackaton-network
     volumes:
       - ./src/Hackaton/Logs:/app/Logs
-      - ./src/Hackaton/appsettings.json:/app/appsettings.json
       - ./src/Resources:/app/Resources 
 
 networks:

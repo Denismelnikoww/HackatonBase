@@ -51,7 +51,7 @@ namespace Hackaton
             var app = builder.Build();
 
             app.LogConfigurationAsJson();
-            
+
             app.UseMiddleware<OptionsMiddleware>();
 
             app.UseCors("AllowSpecificOrigin");
@@ -66,19 +66,14 @@ namespace Hackaton
 
             app.UseHangfireDashboard(builder.Environment.IsProduction());
 
-            //if (builder.Environment.IsProduction())
-            //    app.UseMiddleware<SwaggerAccessMiddleware>();
-
+            //if (builder.Environment.IsProduction()){
             app.UseSwagger();
             app.UseSwaggerUI();
-
+//}
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.MapControllers();
             app.MapDefaultControllerRoute();
-
-            app.UseCoreAdminCustomTitle("Shkets Admin");
-            app.UseCoreAdminCustomUrl("admin");
 
             app.ApplyMigrations();
 

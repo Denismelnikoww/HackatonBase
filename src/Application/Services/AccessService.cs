@@ -11,27 +11,37 @@ public class AccessService(AppDbContext context, IQrService qrService) : IAccess
     {
         var userId = await qrService.Parse(qrId, ct);
 
-        var user = await context.Users.AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => new
-            {
-                IsDeleted = u.IsDeleted,
-                IsBanned = u.IsBanned,
-                Terminals = u.TerminalsAccess,
-            })
-            .FirstOrDefaultAsync(ct);
+        var user = await context.Users
+            .Include(u => u.TerminalsAccess)
+            .ThenInclude(uta => uta.Terminal)
+            .FirstOrDefaultAsync(u => u.Id == userId, ct);
 
         if (user == null) return AccessStatus.Unknown;
 
         if (user.IsDeleted || user.IsBanned) return AccessStatus.Banned;
 
-        if (!user.Terminals.Any(t => t.Id == terminalId)) return AccessStatus.Denied;
+        if (!user.EntryAccess) return AccessStatus.Denied;
 
-        await context.Entries.AddAsync(new Entry
+        var hasTerminalAccess = user.TerminalsAccess
+            .Any(uta => uta.TerminalId == terminalId);
+
+        if (!hasTerminalAccess)
+            return AccessStatus.Denied;
+
+        var terminal = await context.Terminals
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == terminalId && !t.IsDeleted, ct);
+
+        if (terminal == null)
+            return AccessStatus.Denied;
+
+        var entry = new Entry
         {
             UserId = userId,
             TerminalId = terminalId,
-        }, ct);
+        };
+
+        await context.Entries.AddAsync(entry, ct);
         await context.SaveChangesAsync(ct);
 
         return AccessStatus.Granted;

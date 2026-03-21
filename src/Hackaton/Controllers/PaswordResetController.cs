@@ -5,9 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Web.Extensions;
 
 namespace Web.Controllers;
-// #if RELEASE
-//     [ApiExplorerSettings(IgnoreApi = true)] 
-// #endif
 
 [Authorize]
 [ProducesResponseType(401)]

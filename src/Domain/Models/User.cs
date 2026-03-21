@@ -21,7 +21,7 @@ namespace Domain.Models
         public bool IsBanned { get; set; } = false;
 
         public virtual ICollection<Session> Sessions { get; set; }
-        public virtual ICollection<Terminal> TerminalsAccess { get; set; }
+        public virtual ICollection<UserTerminalAccess> TerminalsAccess { get; set; }
 
         public void ConfirmEmail()
         {

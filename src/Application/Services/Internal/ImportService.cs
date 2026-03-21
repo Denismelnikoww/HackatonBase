@@ -11,6 +11,7 @@ namespace Application.Services.Internal
         {
             var users = await context.Users.AsNoTracking()
                 .Where(u => !u.IsDeleted)
+                .OrderBy(x => x.Name)
                 .Skip(skip)
                 .Take(take)
                 .Select(u => new UserLargeDto
@@ -44,6 +45,7 @@ namespace Application.Services.Internal
         {
             var terminals = await context.Terminals.AsNoTracking()
                 .Where(u => !u.IsDeleted)
+                .OrderBy(x => x.Name)
                 .Skip(skip)
                 .Take(take)
                 .Select(t => new TerminalDto
@@ -69,6 +71,7 @@ namespace Application.Services.Internal
         public async Task<PagedResult<EntryDto>> GetEntries(int take, int skip, CancellationToken ct)
         {
             var entries = await context.Entries.AsNoTracking()
+                .OrderBy(x => x.Id)
                 .Skip(skip)
                 .Take(take)
                 .Select(t => new EntryDto

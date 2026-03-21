@@ -54,7 +54,7 @@ services:
       retries: 5
 
   backend:
-    image: podsolnuhhh/hackaton:latest    
+    image: podsolnuhhh/hackaton:v4 
     container_name: hackaton-backend
     restart: unless-stopped
     secrets:
@@ -65,8 +65,10 @@ services:
       - email_password
     ports:
       - "5000:80"
+    env_file:
+      .env
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/api/health/live"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/health/live"]
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80

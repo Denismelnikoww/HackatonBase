@@ -14,6 +14,7 @@ namespace Infrastructure.DbContexts
         public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<Terminal> Terminals { get; set; }
         public DbSet<Entry> Entries { get; set; }
+        public DbSet<UserTerminalAccess> UserTerminalAccess { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +26,7 @@ namespace Infrastructure.DbContexts
             modelBuilder.ApplyConfiguration(new TerminalConfiguration());
             modelBuilder.ApplyConfiguration(new EntryConfiguration());
             modelBuilder.ApplyConfiguration(new ApiKeyConfiguration());
+            modelBuilder.ApplyConfiguration(new UserTerminalAccessConfiguration());
 
             base.OnModelCreating(modelBuilder);
         }
@@ -128,6 +130,26 @@ namespace Infrastructure.DbContexts
 
                 builder.HasIndex(x => new { x.IsDeleted, x.IsBanned })
                     .HasDatabaseName("IX_Users_Status");
+            }
+        }
+        
+        public class UserTerminalAccessConfiguration : IEntityTypeConfiguration<UserTerminalAccess>
+        {
+            public void Configure(EntityTypeBuilder<UserTerminalAccess> builder)
+            {
+                builder.ToTable("user_terminal_access");
+        
+                builder.HasKey(x => new { x.UserId, x.TerminalId });
+        
+                builder.HasOne(x => x.User)
+                    .WithMany(x => x.TerminalsAccess)
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            
+                builder.HasOne(x => x.Terminal)
+                    .WithMany()
+                    .HasForeignKey(x => x.TerminalId)
+                    .OnDelete(DeleteBehavior.Cascade);
             }
         }
 
