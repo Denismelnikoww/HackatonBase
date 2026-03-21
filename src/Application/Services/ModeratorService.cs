@@ -4,10 +4,13 @@ using Domain.Exceptions;
 using Domain.Models;
 using Infrastructure.DbContexts;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Services;
 
-public class ModeratorService(AppDbContext context) : IModeratorService
+public class ModeratorService(
+    AppDbContext context,
+    ILogger<ModeratorService> logger) : IModeratorService
 {
     public async Task<UserWithTerminalsDto> GetUser(Guid userId, CancellationToken ct = default)
     {
@@ -18,13 +21,16 @@ public class ModeratorService(AppDbContext context) : IModeratorService
             {
                 Id = x.Id,
                 EntryAccess = x.EntryAccess,
-                Terminals = x.TerminalsAccess.Select(ta => ta.TerminalId) // Исправлено: берем TerminalId из связной таблицы
+                Terminals = context.UserTerminalAccess
+                    .Where(uta => uta.UserId == x.Id)
+                    .Select(uta => uta.TerminalId)
+                    .ToList()
             })
             .FirstOrDefaultAsync(ct);
 
-        if (user == null) 
+        if (user == null)
             throw new BadRequestException("Пользователя не существует или он удален");
-        
+
         return user;
     }
 
@@ -38,13 +44,15 @@ public class ModeratorService(AppDbContext context) : IModeratorService
         var users = await context.Users
             .AsNoTracking()
             .Where(x => !x.IsDeleted && x.Role == Role.User)
-            .OrderBy(x => x.Name) 
+            .OrderBy(x => x.Name)
             .Skip(skip)
             .Take(take)
             .Select(x => new UserSmallDto
             {
                 Id = x.Id,
                 Email = x.Email,
+                IsEmailConfirmed = x.IsEmailConfirmed,
+                EntryAccess = x.EntryAccess,
                 Name = x.Name,
                 Role = x.Role,
             })
@@ -59,21 +67,21 @@ public class ModeratorService(AppDbContext context) : IModeratorService
         };
     }
 
+
     public async Task SetAccessSettings(IEnumerable<Guid> terminalIds, Guid userId, bool entryAccess,
         CancellationToken ct = default)
     {
         var user = await context.Users
             .Include(x => x.TerminalsAccess)
-            .FirstOrDefaultAsync(x => x.Id == userId, ct);
+            .FirstOrDefaultAsync(x => x.Id == userId && !x.IsDeleted, ct);
 
-        if (user == null) 
-            throw new NotFoundException("Пользователя не существует или он был забанен");
+        if (user == null)
+            throw new NotFoundException("Пользователя не существует или он был удален");
 
-        if (user.IsDeleted)
-            throw new BadRequestException("Пользователь удален");
+        if (user.IsDeleted) throw new BadRequestException("Пользователь удален");
 
         var terminalIdsList = terminalIds.Distinct().ToList();
-        
+
         var existingTerminals = await context.Terminals
             .Where(x => terminalIdsList.Contains(x.Id) && !x.IsDeleted)
             .Select(x => x.Id)
@@ -83,7 +91,7 @@ public class ModeratorService(AppDbContext context) : IModeratorService
             throw new NotFoundException("Некоторые терминалы не найдены или удалены");
 
         user.TerminalsAccess.Clear();
-        
+
         foreach (var terminalId in existingTerminals)
         {
             user.TerminalsAccess.Add(new UserTerminalAccess
@@ -92,21 +100,16 @@ public class ModeratorService(AppDbContext context) : IModeratorService
                 TerminalId = terminalId
             });
         }
-        
+
         user.EntryAccess = entryAccess;
-        
+
         await context.SaveChangesAsync(ct);
     }
+
 
     public async Task<PagedResult<TerminalDto>> GetTerminals(Guid userId, int take, int skip,
         CancellationToken ct = default)
     {
-        var userTerminalIds = await context.UserTerminalAccess
-            .AsNoTracking()
-            .Where(uta => uta.UserId == userId)
-            .Select(uta => uta.TerminalId)
-            .ToListAsync(ct);
-
         var totalCount = await context.Terminals
             .AsNoTracking()
             .Where(t => !t.IsDeleted)
@@ -115,14 +118,23 @@ public class ModeratorService(AppDbContext context) : IModeratorService
         var terminals = await context.Terminals
             .AsNoTracking()
             .Where(t => !t.IsDeleted)
-            .OrderBy(t => t.Name)
+            .GroupJoin(
+                context.UserTerminalAccess
+                    .AsNoTracking()
+                    .Where(uta => uta.UserId == userId),
+                terminal => terminal.Id,
+                access => access.TerminalId,
+                (terminal, accessGroup) =>
+                    new { Terminal = terminal, HasAccess = accessGroup.Any() } // Создаём анонимный объект
+            )
+            .OrderBy(x => x.Terminal.Name)
             .Skip(skip)
             .Take(take)
-            .Select(t => new TerminalDto
+            .Select(x => new TerminalDto
             {
-                Id = t.Id,
-                Name = t.Name,
-                EntryAccess = userTerminalIds.Contains(t.Id)
+                Id = x.Terminal.Id,
+                Name = x.Terminal.Name,
+                EntryAccess = x.HasAccess
             })
             .ToListAsync(ct);
 

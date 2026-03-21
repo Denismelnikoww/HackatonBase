@@ -16,7 +16,8 @@ namespace Application.Services
                 {
                     Name = u.Name,
                     Role = u.Role,
-                    EntryAccess = u.EntryAccess
+                    EntryAccess = u.EntryAccess,
+                    IsEmailConfirmed = u.IsEmailConfirmed
                 })
                 .FirstOrDefaultAsync(ct);
 

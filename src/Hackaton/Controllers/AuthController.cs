@@ -81,17 +81,17 @@ public class AuthController(
         Response.Cookies.Append(_options.AccessCookieName, accessToken, new CookieOptions
         {
             IsEssential = true,
-            //Secure = true,
+            Secure = true,
             HttpOnly = true,
-            //SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Strict,
             MaxAge = TimeSpan.FromMinutes(_options.AccessTokenExpirationMinutes)
         });
         Response.Cookies.Append(_options.RefreshCookieName, refreshToken, new CookieOptions
         {
             IsEssential = true,
-            //Secure = true,
+            Secure = true,
             HttpOnly = true,
-            //SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Strict,
             MaxAge = TimeSpan.FromDays(_options.RefreshTokenExpirationDays)
         });
     }

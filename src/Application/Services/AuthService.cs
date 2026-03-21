@@ -51,8 +51,8 @@ namespace Application.Services
 
             login = login.ToLower() ?? string.Empty;
 
-            var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login.ToLower())
-                || (u.IsEmailConfirmed && u.Email == login), ct);
+            var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login)
+                || (u.Email == login), ct);
 
             if (user == null)
                 throw new NotFoundException("Неверный логин или пароль");

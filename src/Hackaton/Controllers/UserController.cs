@@ -14,6 +14,11 @@ public class UserController(
     [Produces(typeof(UserInfo))]
     public async Task<IActionResult> Info(Guid id, CancellationToken ct)
         => Ok(await userService.GetInfo(id, ct));
+    
+    [HttpGet("[action]/{id}")]
+    [Produces(typeof(UserInfo))]
+    public async Task<IActionResult> Info(Guid id, CancellationToken ct)
+        => Ok(await userService.GetInfo(id, ct));
 
     /// <summary>
     /// Требует авторизации

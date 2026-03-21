@@ -14,7 +14,7 @@ public class ResetPasswordService(
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user == null) throw new NotFoundException("Такого пользователя не существует");
         if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
-            throw new BadRequestException("Пароли не совпадают");
+            throw new BadRequestException("Страрый пароль не совпадает с введенным");
 
         user.PasswordHash = passwordHasher.Hash(newPassword);
 

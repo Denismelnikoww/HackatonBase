@@ -7,5 +7,6 @@ namespace Application.DTO
         public Role Role { get; set; }
         public string Name { get; set; }
         public bool EntryAccess {get; set;}
+        public bool IsEmailConfirmed {get; set;}
     }
 }
