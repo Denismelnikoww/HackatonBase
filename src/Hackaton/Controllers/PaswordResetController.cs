@@ -1,34 +1,25 @@
 ﻿using API.Contracts.Requests;
 using Infrastructure.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Web.Extensions;
 
-namespace Web.Controllers
+namespace Web.Controllers;
+// #if RELEASE
+//     [ApiExplorerSettings(IgnoreApi = true)] 
+// #endif
+
+[Authorize]
+[ProducesResponseType(401)]
+[Route("api/[controller]")]
+public class PaswordResetController(
+    IResetPasswordService resetPasswordService) : ControllerBase
 {
-#if RELEASE
-    [ApiExplorerSettings(IgnoreApi = true)] 
-#endif
-    
-    [Route("api/[controller]")]
-    public class PaswordResetController(
-        IResetPasswordByEmailService resetPasswordService) : ControllerBase
+    [HttpPost("[action]")]
+    public async Task<IActionResult> Validate([FromBody] ResetPasswordRequest request,
+        CancellationToken ct)
     {
-        /// <summary>
-        /// Отправляет на почту ссылку на фронт для сброса пароля
-        /// </summary>
-        [HttpGet("[action]/{email}")]
-        public async Task<IActionResult> SendLink(string email, CancellationToken ct)
-        {
-            await resetPasswordService.SendLink(email, ct);
-            return Ok();
-        }
-
-        [HttpPost("[action]")]
-        public async Task<IActionResult> Validate([FromBody] ResetPasswordRequest request,
-            CancellationToken ct)
-        {
-            await resetPasswordService.ResetPassword(request.EmailId,
-                   request.Password, ct);
-           return Ok();
-        }
+        await resetPasswordService.ResetPassword(User.GetUserId(), request.OldPassword, request.NewPassword, ct);
+        return Ok("Пароль успешно сменен");
     }
 }

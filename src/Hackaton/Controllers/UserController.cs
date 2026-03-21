@@ -6,9 +6,9 @@ using Web.Extensions;
 
 namespace API.Controllers
 {
-#if RELEASE
-    [ApiExplorerSettings(IgnoreApi = true)] 
-#endif
+// #if RELEASE
+//     [ApiExplorerSettings(IgnoreApi = true)] 
+// #endif
     
     [Route("api/[controller]")]
     public class UserController(

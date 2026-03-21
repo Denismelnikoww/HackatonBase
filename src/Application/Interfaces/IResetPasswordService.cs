@@ -2,7 +2,6 @@
 {
     public interface IResetPasswordService
     {
-        Task ResetPassword(string email, string password, CancellationToken ct);
-        Task SendLink(string email, CancellationToken ct);
+        Task ResetPassword(Guid userId,string oldPassword, string newPassword, CancellationToken ct = default);
     }
 }

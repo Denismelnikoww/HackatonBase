@@ -16,6 +16,7 @@ namespace Domain.Models
         public DateTime PasswordChangeDate { get; set; } = DateTime.UtcNow;
 
         public bool IsEmailConfirmed { get; private set; } = false;
+        public bool EntryAccess { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
         public bool IsBanned { get; set; } = false;
 

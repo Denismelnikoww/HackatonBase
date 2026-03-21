@@ -4,21 +4,21 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers
 {
-#if RELEASE
-    [ApiExplorerSettings(IgnoreApi = true)] 
-#endif
-    
+// #if RELEASE
+//     [ApiExplorerSettings(IgnoreApi = true)] 
+// #endif
+
     [Route("api/[controller]")]
     public class PaswordResetByEmailController(
-        IResetPasswordService resetPasswordService) : ControllerBase
+        IResetPasswordByEmailService resetPasswordByEmailService) : ControllerBase
     {
         /// <summary>
         /// Отправляет на почту ссылку на фронт для сброса пароля
         /// </summary>
-        [HttpGet("[action]/{email}")]
-        public async Task<IActionResult> SendLink(string email, CancellationToken ct)
+        [HttpGet("[action]")]
+        public async Task<IActionResult> SendLink([FromQuery] string email, CancellationToken ct)
         {
-            await resetPasswordService.SendLink(email, ct);
+            await resetPasswordByEmailService.SendLink(email, ct);
             return Ok();
         }
 
@@ -26,8 +26,8 @@ namespace Web.Controllers
         public async Task<IActionResult> Validate([FromBody] ResetPasswordByEmailRequest byEmailRequest,
             CancellationToken ct)
         {
-            await resetPasswordService.ResetPassword(byEmailRequest.EmailId,
-                   byEmailRequest.Password, ct);
+            await resetPasswordByEmailService.ResetPassword(byEmailRequest.EmailId,
+                byEmailRequest.Password, ct);
             return Ok();
         }
     }

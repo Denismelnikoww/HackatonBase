@@ -50,6 +50,10 @@ namespace Web.Extensions
             services.AddOptions<VerificationOptions>()
                 .Bind(configuration.GetSection("VerificationOptions"))
                 .ValidateOnStart();
+            
+            services.AddOptions<ApiKeyOptions>()
+                .Bind(configuration.GetSection("ApiKeyOptions"))
+                .ValidateOnStart();
 
             services.AddOptions<ConnectionStringsOptions>()
                 .Bind(configuration.GetSection("ConnectionOptions"))
@@ -70,6 +74,7 @@ namespace Web.Extensions
 
         public static IHostApplicationBuilder ValidateOptions(this IHostApplicationBuilder builder)
         {
+            builder.Services.AddSingleton<IValidateOptions<ApiKeyOptions>, ApiKeyOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<SmtpOptions>, SmtpOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<QrOptions>, QrOptionsValidator>();

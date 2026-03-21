@@ -102,6 +102,9 @@ namespace Infrastructure.DbContexts
 
                 builder.Property(x => x.IsDeleted)
                     .HasDefaultValue(false);
+                
+                builder.Property(x => x.EntryAccess)
+                    .HasDefaultValue(false);
 
                 builder.Property(x => x.IsBanned)
                     .HasDefaultValue(false);

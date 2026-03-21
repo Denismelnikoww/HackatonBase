@@ -5,23 +5,13 @@ using Web.Extensions;
 
 namespace Web.Controllers
 {
-#if RELEASE
-    [ApiExplorerSettings(IgnoreApi = true)] 
-#endif
-    
+// #if RELEASE
+//     [ApiExplorerSettings(IgnoreApi = true)] 
+// #endif
+
     [Route("api/[controller]")]
     public class EmailConfirmController(IEmailConfirmService emailConfirmService) : ControllerBase
     {
-        /// <summary>
-        /// Отправляет на почту ссылку на фронт для подтверждения почты
-        /// </summary>
-        [HttpGet("[action]/{email}")]
-        public async Task<IActionResult> SendLink(string email, CancellationToken ct)
-        {
-            await emailConfirmService.SendLink(email, ct);
-            return Ok();
-        }
-
         /// <summary>
         /// Требует авторизации.
         /// Отправляет на почту ссылку на фронт для подтверждения почты
@@ -38,8 +28,8 @@ namespace Web.Controllers
         /// <summary>
         /// Подтверждение почты
         /// </summary>
-        [HttpGet("{emailId}")]
-        public async Task<IActionResult> Validate(Guid emailId, CancellationToken ct)
+        [HttpGet()]
+        public async Task<IActionResult> Validate([FromQuery] Guid emailId, CancellationToken ct)
         {
             await emailConfirmService.ConfirmEmail(emailId.ToString(), ct);
             return Ok();

@@ -6,6 +6,6 @@ namespace Application.Interfaces
     {
         Task<PagedResult<EntryDto>> GetEntries(int take, int skip, CancellationToken ct);
         Task<PagedResult<TerminalDto>> GetTerminals(int take, int skip, CancellationToken ct);
-        Task<PagedResult<UserDto>> GetUsers(int take, int skip, CancellationToken ct);
+        Task<PagedResult<UserLargeDto>> GetUsers(int take, int skip, CancellationToken ct);
     }
 }

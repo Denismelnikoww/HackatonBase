@@ -55,7 +55,7 @@ namespace Application.Services
                 || (u.IsEmailConfirmed && u.Email == login), ct);
 
             if (user == null)
-                throw new NotFoundException("Такого пользователя не существует");
+                throw new NotFoundException("Неверный логин или пароль");
 
             if (!passwordHasher.Verify(password, user.PasswordHash))
                 throw new BadRequestException("Неверный пароль");

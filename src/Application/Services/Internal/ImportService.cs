@@ -7,13 +7,13 @@ namespace Application.Services.Internal
 {
     public class ImportService(AppDbContext context) : IImportService
     {
-        public async Task<PagedResult<UserDto>> GetUsers(int take, int skip, CancellationToken ct)
+        public async Task<PagedResult<UserLargeDto>> GetUsers(int take, int skip, CancellationToken ct)
         {
             var users = await context.Users.AsNoTracking()
                 .Where(u => !u.IsDeleted)
                 .Skip(skip)
                 .Take(take)
-                .Select(u => new UserDto
+                .Select(u => new UserLargeDto
                 {
                     Id = u.Id,
                     Name = u.Name,
@@ -23,6 +23,7 @@ namespace Application.Services.Internal
                     Role = u.Role,
                     RegistrationDate = u.RegistrationDate,
                     IsBanned = u.IsBanned,
+                    EntryAccess = u.EntryAccess
                 })
                 .ToListAsync(ct);
 
@@ -30,7 +31,7 @@ namespace Application.Services.Internal
                 .Where(u => !u.IsDeleted)
                 .CountAsync(ct);
 
-            return new PagedResult<UserDto>
+            return new PagedResult<UserLargeDto>
             {
                 Items = users,
                 Take = take,

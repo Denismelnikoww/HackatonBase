@@ -1,23 +1,24 @@
 using Application.Interfaces;
+using Infrastructure.Options;
+using Microsoft.Extensions.Options;
 
 namespace Web.Middlewares;
 
-public class ApiKeyMiddleware
+public class ApiKeyMiddleware(RequestDelegate next, IOptions<ApiKeyOptions> options)
 {
-    private readonly RequestDelegate _next;
-
-    public ApiKeyMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
     public async Task InvokeAsync(HttpContext context, IApiKeyService apiKeyService)
     {
+        if (!options.Value.UseApiKeyAccess)
+        {
+            await next(context);
+            return;
+        }
+
         var requestPath = context.Request.Path.Value ?? "";
 
         if (requestPath.StartsWith("/internal", StringComparison.OrdinalIgnoreCase))
         {
-            if (!context.Request.Headers.TryGetValue("X-API-Key", out var extractedApiKey))
+            if (!context.Request.Headers.TryGetValue(options.Value.Header, out var extractedApiKey))
             {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Unauthorized: Missing API key.");
@@ -34,6 +35,6 @@ public class ApiKeyMiddleware
             }
         }
 
-        await _next(context);
+        await next(context);
     }
 }

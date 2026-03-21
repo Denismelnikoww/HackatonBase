@@ -2,6 +2,10 @@
 **/obj/
 **/packages/
 
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.Production.json
+
 **/.vs/
 **/.vscode/
 **/.idea/

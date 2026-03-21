@@ -30,7 +30,7 @@ namespace Application.Services
             if (!user.IsEmailConfirmed) throw new BadRequestException("Почта данного пользователя не подтверждена");
 
             var emailId = Guid.NewGuid().ToString();
-            var link = $"https://{_options.ResetPasswordLink}?emailId={emailId}";
+            var link = $"https://{emailId}";
 
             await redisCacheService.SetAsync(emailId, email,
                 TimeSpan.FromMinutes(_options.EmailExpirationMinutes));

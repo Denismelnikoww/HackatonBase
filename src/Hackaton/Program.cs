@@ -50,6 +50,8 @@ namespace Hackaton
 
             var app = builder.Build();
 
+            app.LogConfigurationAsJson();
+            
             app.UseMiddleware<OptionsMiddleware>();
 
             app.UseCors("AllowSpecificOrigin");
@@ -57,7 +59,7 @@ namespace Hackaton
             app.UseRouting();
 
             app.UseMiddleware<ExceptionHandlingMiddleware>();
-            // app.UseMiddleware<ApiKeyMiddleware>();
+            app.UseMiddleware<ApiKeyMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();

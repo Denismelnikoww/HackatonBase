@@ -15,7 +15,8 @@ namespace Application.Services
                 .Select(u => new UserInfo
                 {
                     Name = u.Name,
-                    Role = u.Role
+                    Role = u.Role,
+                    EntryAccess = u.EntryAccess
                 })
                 .FirstOrDefaultAsync(ct);
 

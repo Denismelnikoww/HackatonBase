@@ -16,7 +16,7 @@ namespace Web.Controllers.Internal
         /// Получить список пользователей с пагинацией
         /// </summary>
         [HttpGet("[action]")]
-        [Produces(typeof(PagedResult<UserDto>))]
+        [Produces(typeof(PagedResult<UserLargeDto>))]
         public async Task<IActionResult> Users([FromQuery] PagedRequest request, CancellationToken ct)
             => Ok(await importService.GetUsers(request.Take, request.Skip, ct));
 

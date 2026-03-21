@@ -5,9 +5,9 @@ using Web.Extensions;
 
 namespace Web.Controllers
 {
-#if RELEASE
-    [ApiExplorerSettings(IgnoreApi = true)]
-#endif
+// #if RELEASE
+//     [ApiExplorerSettings(IgnoreApi = true)]
+// #endif
 
     [Route("api/[controller]")]
     public class QrController(IQrService qrService) : ControllerBase
@@ -19,8 +19,9 @@ namespace Web.Controllers
         [Authorize]
         [Produces(typeof(Guid))]
         [HttpGet("[action]")]
-        public IActionResult Generate(CancellationToken ct)
-            => Ok(qrService.Generate(User.GetUserId()));
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> Generate(CancellationToken ct)
+            => Ok(await qrService.Generate(User.GetUserId()));
 
         /// <summary>
         /// Отзывает GUID который был получен из api/qr/generate.
@@ -32,7 +33,10 @@ namespace Web.Controllers
         /// <param name="qrId">Guid который был получен из api/qr/generate</param>
         [Produces(typeof(Guid))]
         [HttpGet("[action]")]
-        public IActionResult Revoke([FromQuery] Guid qrId, CancellationToken ct)
-            => Ok(qrService.Revoke(qrId, ct));
+        public async Task<IActionResult> Revoke([FromQuery] Guid qrId, CancellationToken ct)
+        {
+            await qrService.Revoke(qrId, ct);
+            return Ok();
+        }
     }
 }

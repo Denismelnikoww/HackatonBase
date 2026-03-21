@@ -23,12 +23,14 @@ namespace Web.Extensions
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailConfirmService, EmailConfirmService>();
 
+            services.AddScoped<IResetPasswordService, ResetPasswordService>();
             services.AddScoped<IResetPasswordByEmailService, ResetPasswordByEmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IApiKeyService, ApiKeyService>();
             services.AddScoped<IQrService, QrService>();
             services.AddScoped<IImportService, ImportService>();
+            services.AddScoped<IModeratorService, ModeratorService>();
 
             return services;
         }
