@@ -20,8 +20,8 @@ namespace Application.Services
            string? email = null,
            CancellationToken ct = default)
         {
-            email = email?.ToLower() ?? string.Empty;
-            login = login?.ToLower() ?? string.Empty;
+            email = email?.ToLower().Trim() ?? string.Empty;
+            login = login?.ToLower().Trim() ?? string.Empty;
 
             var user = await context.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Login == login
@@ -49,7 +49,7 @@ namespace Application.Services
             if (string.IsNullOrWhiteSpace(login))
                 throw new BadRequestException("Логин не должен быть пустым");
 
-            login = login.ToLower() ?? string.Empty;
+            login = login.ToLower().Trim() ?? string.Empty;
 
             var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login)
                 || (u.Email == login), ct);
