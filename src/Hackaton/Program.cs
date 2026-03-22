@@ -66,10 +66,12 @@ namespace Hackaton
 
             app.UseHangfireDashboard(builder.Environment.IsProduction());
 
-            //if (builder.Environment.IsProduction()){
-            app.UseSwagger();
-            app.UseSwaggerUI();
-//}
+            if (builder.Configuration.GetValue<bool>("SwaggerEnabled"))
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.MapControllers();

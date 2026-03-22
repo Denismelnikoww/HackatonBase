@@ -2,7 +2,6 @@
 {
     public interface IResetPasswordByEmailService
     {
-        Task ResetPassword(string email, string password, CancellationToken ct);
-        Task SendLink(string email, CancellationToken ct);
+        Task SendPassword(string email, CancellationToken ct);
     }
 }
