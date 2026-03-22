@@ -10,11 +10,13 @@ namespace API.Controllers;
 public class UserController(
     IUserService userService) : ControllerBase
 {
-    [HttpGet("[action]/{id}")]
-    [Produces(typeof(UserInfo))]
-    public async Task<IActionResult> Info(Guid id, CancellationToken ct)
-        => Ok(await userService.GetInfo(id, ct));
-    
+    [HttpGet("[action]")]
+    public async Task<IActionResult> Rename([FromQuery] string name, CancellationToken ct)
+    {
+        await userService.Rename(User.GetUserId(), name, ct);
+        return Ok();
+    }
+
     [HttpGet("[action]/{id}")]
     [Produces(typeof(UserInfo))]
     public async Task<IActionResult> Info(Guid id, CancellationToken ct)

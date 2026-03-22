@@ -32,7 +32,7 @@ namespace Application.Services
 
             var newUser = new User
             {
-                Name = name,
+                Name = name.Trim(),
                 Login = login,
                 PasswordHash = passwordHasher.Hash(password),
             };

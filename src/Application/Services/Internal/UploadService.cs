@@ -31,9 +31,7 @@ namespace Application.Services.Internal
             foreach (var userDto in users)
             {
                 if (!string.IsNullOrEmpty(userDto.Email) && existingUsersByEmail.ContainsKey(userDto.Email))
-                {
                     continue;
-                }
 
                 if (existingUsersById.TryGetValue(userDto.Id, out var existingUser))
                 {
@@ -56,15 +54,13 @@ namespace Application.Services.Internal
                         IsBanned = userDto.IsBanned,
                         EntryAccess = userDto.EntryAccess
                     };
-                    newUser.ChangeEmail(userDto.Email); 
+                    newUser.ChangeEmail(userDto.Email);
                     entitiesToInsert.Add(newUser);
                 }
             }
 
             if (entitiesToInsert.Any())
-            {
                 context.Users.AddRange(entitiesToInsert);
-            }
 
             await context.SaveChangesAsync(ct);
         }
@@ -88,7 +84,7 @@ namespace Application.Services.Internal
                 if (existingTerminals.TryGetValue(terminalDto.Id, out var existingTerminal))
                 {
                     existingTerminal.Name = terminalDto.Name;
-                    existingTerminal.IsDeleted = false; 
+                    existingTerminal.IsDeleted = false;
                     entitiesToUpdate.Add(existingTerminal);
                 }
                 else
@@ -104,9 +100,7 @@ namespace Application.Services.Internal
             }
 
             if (entitiesToInsert.Any())
-            {
                 context.Terminals.AddRange(entitiesToInsert);
-            }
 
             await context.SaveChangesAsync(ct);
         }
