@@ -6,9 +6,6 @@ namespace API.Contracts.Requests
     {
         public string Login { get; set; }
 
-        [EmailAddress] 
-        public string Email { get; set; }
-
         [Required]
         [MinLength(8, ErrorMessage = "Пароль должен быть не короче 8 символов")]
         public string Password { get; set; }

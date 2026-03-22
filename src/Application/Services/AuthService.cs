@@ -14,18 +14,18 @@ namespace Application.Services
         IPasswordHasher passwordHasher) : IAuthService
     {
         public async Task Register(
-           string name,
-           string login,
-           string password,
-           string? email = null,
-           CancellationToken ct = default)
+            string name,
+            string login,
+            string password,
+            string? email = null,
+            CancellationToken ct = default)
         {
             email = email?.ToLower().Trim() ?? string.Empty;
             login = login?.ToLower().Trim() ?? string.Empty;
 
             var user = await context.Users.AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Login == login
-                    || u.Email == email, ct);
+                                          || u.Email == email, ct);
 
             if (user != null)
                 throw new ConflictException("Пользователь с таким логином и/или почтой уже существует");
@@ -52,7 +52,7 @@ namespace Application.Services
             login = login.ToLower().Trim() ?? string.Empty;
 
             var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login)
-                || (u.Email == login), ct);
+                                                                    || (u.Email == login), ct);
 
             if (user == null)
                 throw new NotFoundException("Неверный логин или пароль");
@@ -86,21 +86,6 @@ namespace Application.Services
             await context.SaveChangesAsync(ct);
 
             return tokens;
-        }
-
-        public async Task ResetPassword(Guid userId,
-           string oldPassword, string newPassword,
-           CancellationToken ct = default)
-        {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
-
-            if (user == null)
-                throw new NotFoundException("Такого пользователя не существует");
-
-            if (!passwordHasher.Verify(oldPassword, user.PasswordHash))
-                throw new BadRequestException("Неверный пароль");
-
-            await context.SaveChangesAsync(ct);
         }
 
         public async Task Logout(Guid sessionId,
