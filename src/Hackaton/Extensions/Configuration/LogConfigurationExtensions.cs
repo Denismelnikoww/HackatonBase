@@ -1,10 +1,6 @@
 using Hackaton;
 
-namespace Web.Extensions;
-
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+namespace Web.Extensions.Configuration;
 
 public static class LogConfigurationExtensions
 {

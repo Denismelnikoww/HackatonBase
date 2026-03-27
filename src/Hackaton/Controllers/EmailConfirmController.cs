@@ -13,21 +13,23 @@ public class EmailConfirmController(IEmailConfirmService emailConfirmService) : 
     /// Отправляет на почту ссылку на фронт для подтверждения почты
     /// </summary>
     [Authorize]
-    [HttpGet("[action]")]
+    [HttpGet()]
     [ProducesResponseType(401)]
-    public async Task<IActionResult> SendLink(CancellationToken ct)
+    public async Task<IActionResult> SendToken(CancellationToken ct)
     {
-        await emailConfirmService.SendLink(User.GetUserId(), ct);
+        await emailConfirmService.SendToken(User.GetUserId(), ct);
         return Ok();
     }
 
     /// <summary>
+    /// Требует авторизации.
     /// Подтверждение почты
     /// </summary>
-    [HttpGet()]
-    public async Task<IActionResult> Validate([FromQuery] Guid emailId, CancellationToken ct)
+    [HttpGet("[action]")]
+    [ProducesResponseType(401)]
+    public async Task<IActionResult> Confirm([FromQuery] string token, CancellationToken ct)
     {
-        await emailConfirmService.ConfirmEmail(emailId.ToString(), ct);
+        await emailConfirmService.ConfirmEmail(User.GetUserId(), token, ct);
         return Ok();
     }
 }

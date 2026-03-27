@@ -16,7 +16,6 @@ public class UserService(AppDbContext context) : IUserService
             {
                 Name = u.Name,
                 Role = u.Role,
-                EntryAccess = u.EntryAccess,
                 IsEmailConfirmed = u.IsEmailConfirmed
             })
             .FirstOrDefaultAsync(ct);

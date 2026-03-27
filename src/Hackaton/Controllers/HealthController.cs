@@ -7,6 +7,5 @@ namespace API.Controllers;
 public class HealthController : ControllerBase
 {
     [HttpGet("[action]")]
-    public async Task<DateTime> Live()
-        => DateTime.UtcNow;
+    public async Task<DateTime> Live() => DateTime.UtcNow;
 }

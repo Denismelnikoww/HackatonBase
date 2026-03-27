@@ -38,10 +38,6 @@ namespace Web.Extensions
             services.AddOptions<EmailTemplateOptions>()
                 .Bind(configuration.GetSection("EmailTemplateOptions"))
                 .ValidateOnStart();
-            
-            services.AddOptions<QrOptions>()
-                .Bind(configuration.GetSection("QrOptions"))
-                .ValidateOnStart();
 
             services.AddOptions<LoggingOptions>()
                 .Bind(configuration.GetSection("LoggingOptions"))
@@ -50,7 +46,7 @@ namespace Web.Extensions
             services.AddOptions<VerificationOptions>()
                 .Bind(configuration.GetSection("VerificationOptions"))
                 .ValidateOnStart();
-            
+
             services.AddOptions<ApiKeyOptions>()
                 .Bind(configuration.GetSection("ApiKeyOptions"))
                 .ValidateOnStart();
@@ -77,7 +73,6 @@ namespace Web.Extensions
             builder.Services.AddSingleton<IValidateOptions<ApiKeyOptions>, ApiKeyOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<SmtpOptions>, SmtpOptionsValidator>();
-            builder.Services.AddSingleton<IValidateOptions<QrOptions>, QrOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<EmailTemplateOptions>, EmailTemplateOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<LoggingOptions>, LoggingOptionsValidator>();
             builder.Services.AddSingleton<IValidateOptions<VerificationOptions>, VerificationOptionsValidator>();

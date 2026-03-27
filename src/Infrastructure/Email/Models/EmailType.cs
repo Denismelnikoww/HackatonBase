@@ -1,11 +1,7 @@
-﻿namespace Infrastructure.Email
+﻿namespace Infrastructure.Email;
+
+public enum EmailType
 {
-    public partial class EmailTemplateBuilder
-    {
-        public enum EmailType
-        {
-            EmailConfirm,
-            ResetPassword
-        }
-    }
+    EmailConfirm,
+    ResetPassword
 }

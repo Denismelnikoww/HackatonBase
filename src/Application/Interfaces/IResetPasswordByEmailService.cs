@@ -1,7 +1,7 @@
-﻿namespace Infrastructure.Interfaces
+﻿namespace Application.Interfaces;
+
+public interface IResetPasswordByEmailService
 {
-    public interface IResetPasswordByEmailService
-    {
-        Task SendPassword(string email, CancellationToken ct);
-    }
+    Task SendToken(string email, CancellationToken ct);
+    Task<string> ValidateToken(string token,string email, CancellationToken ct);
 }

@@ -2,8 +2,7 @@
 {
     public interface IEmailConfirmService
     {
-        Task ConfirmEmail(string emailId, CancellationToken ct);
-        Task SendLink(Guid userId, CancellationToken ct);
-        Task SendLink(string email, CancellationToken ct);
+        Task ConfirmEmail(Guid userId, string inputToken, CancellationToken ct);
+        Task SendToken(Guid userId, CancellationToken ct);
     }
 }

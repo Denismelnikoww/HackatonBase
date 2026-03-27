@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Application.Interfaces;
+using Domain.Exceptions;
 using Infrastructure.DbContexts;
 using Infrastructure.Interfaces;
 using Infrastructure.Options;
@@ -10,31 +11,55 @@ namespace Application.Services
     public class ResetPasswordByEmailService(
         IOptions<VerificationOptions> options,
         IEmailTemplateBuilder emailTemplateBuilder,
-        IPasswordHasher passwordHasher,
+        IJwtProvider jwtProvider,
+        IRedisCacheService redisCacheService,
         IEmailService emailService,
+        IVerificationTokenProvider tokenProvider,
         AppDbContext context) : IResetPasswordByEmailService
     {
         private readonly VerificationOptions _options = options.Value;
 
-        public async Task SendPassword(string email, CancellationToken ct)
+        public async Task SendToken(string email, CancellationToken ct)
         {
-            var user = await context.Users.AsNoTracking()
+            var user = await context.Users
                 .Where(u => u.Email == email)
                 .Select(u => new
                 {
+                    Id = u.Id,
                     IsEmailConfirmed = u.IsEmailConfirmed
                 })
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(ct);
 
             if (user == null) throw new NotFoundException("Такого пользователя не существует");
             if (!user.IsEmailConfirmed) throw new BadRequestException("Почта данного пользователя не подтверждена");
 
-            var emailId = Guid.NewGuid().ToString();
-            var link = $"https://{emailId}";
+            var token = tokenProvider.GenerateResetToken();
+            await redisCacheService.SetAsync(email, token);
 
-            var html = emailTemplateBuilder.BuildResetPasswordEmail(link, _options.EmailExpirationMinutes);
-
+            var html = emailTemplateBuilder.BuildResetPasswordEmail(token, _options.EmailTokenExpirationMinutes);
             await emailService.SendAsync(email, "Смена пароля", html, ct);
+        }
+
+        public async Task<string> ValidateToken(string inputToken, string email, CancellationToken ct)
+        {
+            var user = await context.Users
+                .Where(u => u.Email == email)
+                .Select(u => new
+                {
+                    Id = u.Id,
+                    IsEmailConfirmed = u.IsEmailConfirmed
+                })
+                .FirstOrDefaultAsync(ct);
+
+            if (user == null) throw new NotFoundException("Такого пользователя не существует");
+            if (!user.IsEmailConfirmed) throw new BadRequestException("Почта данного пользователя не подтверждена");
+
+            var token = await redisCacheService.GetAsync<string>(email);
+
+            if (string.Equals(token, inputToken, StringComparison.CurrentCultureIgnoreCase))
+                throw new BadRequestException("Неверный или истекший токен сброса пароля");
+
+            return jwtProvider.GeneratePasswordResetToken(email);
         }
     }
 }

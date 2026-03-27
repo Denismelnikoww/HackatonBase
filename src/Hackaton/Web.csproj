@@ -32,8 +32,7 @@
 
 	<ItemGroup>
 		<Folder Include="Contracts\Responses\" />
-		<Folder Include="Interfaces\" />
-		<Folder Include="Services\" />
+		<Folder Include="Controllers\Internal\" />
 	</ItemGroup>
 
 	<ItemGroup>

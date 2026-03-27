@@ -1,85 +1,90 @@
-using Infrastructure.Extensions;
 using Web.Extensions;
+using Web.Extensions.Configuration;
 using Web.Middlewares;
 using Web.Middlewares.Web.Middlewares;
 
-namespace Hackaton
+namespace Hackaton;
+
+public class Program
 {
-    public class Program
+    public static async Task Main(string[] args)
     {
-        public static async Task Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+        builder.Configuration.AddEnvironmentVariables();
+        builder.Configuration.AddKeyPerFile("/run/secrets", optional: true, reloadOnChange: true);
+        builder.AddOptions();
+        builder.ValidateOptions();
+
+        builder.Services.AddRouting(options =>
         {
-            var builder = WebApplication.CreateBuilder(args);
-            builder.Configuration.AddEnvironmentVariables();
-            builder.Configuration.AddKeyPerFile("/run/secrets", optional: true, reloadOnChange: true);
-            builder.AddOptions();
-            builder.ValidateOptions();
+            options.LowercaseUrls = true;
+        });
 
-            builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddXmlCommentsToSwagger();
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddXmlCommentsToSwagger();
 
-            builder.AddAuth();
+        builder.AddAuth();
 
-            builder.AddDb();
-            builder.AddRedis();
+        builder.AddDb();
+        builder.AddRedis();
 
-            builder.AddHangfire();
+        builder.AddHangfire();
 
-            builder.Services.AddServices();
-            builder.Services.AddBackgroundJobs();
-            builder.Host.UseCustomLogging();
-            builder.AddClaimsPrincipalExtension();
-            builder.AddHttpClients();
-            builder.Services.AddCoreAdmin(builder.Environment.IsDevelopment() ? string.Empty : "Admin");
+        builder.Services.AddInfrastructure();
+        builder.Services.AddServices();
+        builder.Services.AddBackgroundJobs();
+        builder.Host.UseCustomLogging();
+        builder.AddClaimsPrincipalExtension();
+        builder.Services.AddCoreAdmin(builder.Environment.IsDevelopment() ? string.Empty : "Admin");
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowSpecificOrigin",
-                    policy =>
-                    {
-                        policy.WithOrigins("https://shkets.ru",
-                                "http://localhost:5173", "http://localhost:5000",
-                                "http://192.168.31.223:5273", "http://192.168.31.159:7225")
-                            .AllowCredentials()
-                            .AllowAnyHeader()
-                            .AllowAnyMethod();
-                    });
-            });
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowSpecificOrigin",
+                policy =>
+                {
+                    policy.WithOrigins(builder.Configuration
+                            .GetValue<string>("AllowedOrigins")
+                            ?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            ?? Array.Empty<string>())
+                        .AllowCredentials()
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+        });
 
-            var app = builder.Build();
+        var app = builder.Build();
 
-            app.LogConfigurationAsJson();
+        app.LogConfigurationAsJson();
 
-            app.UseMiddleware<OptionsMiddleware>();
+        app.UseMiddleware<OptionsMiddleware>();
 
-            app.UseCors("AllowSpecificOrigin");
+        app.UseCors("AllowSpecificOrigin");
 
-            app.UseRouting();
+        app.UseRouting();
 
-            app.UseMiddleware<ExceptionHandlingMiddleware>();
-            app.UseMiddleware<ApiKeyMiddleware>();
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseMiddleware<ApiKeyMiddleware>();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-            app.UseHangfireDashboard(builder.Environment.IsProduction());
+        app.UseHangfireDashboard(builder.Environment.IsProduction());
 
-            if (builder.Configuration.GetValue<bool>("SwaggerEnabled"))
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-            app.MapControllers();
-            app.MapDefaultControllerRoute();
-
-            app.ApplyMigrations();
-
-            app.Run();
+        if (builder.Configuration.GetValue<bool>("SwaggerEnabled"))
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.MapControllers();
+        app.MapDefaultControllerRoute();
+
+        app.ApplyMigrations();
+
+        app.Run();
     }
 }

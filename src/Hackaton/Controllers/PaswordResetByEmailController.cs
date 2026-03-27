@@ -1,29 +1,44 @@
 ﻿using API.Contracts.Requests;
-using Infrastructure.Interfaces;
+using Application.Interfaces;
+using Infrastructure.Options;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Web.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/password/recovery")]
 public class PaswordResetByEmailController(
+    IOptions<JwtOptions> options,
     IResetPasswordByEmailService resetPasswordByEmailService) : ControllerBase
 {
+    private JwtOptions _jwtOptions = options.Value;
+
     /// <summary>
-    /// Отправляет на почту ссылку на фронт для сброса пароля
+    /// Отправляет на почту код для сброса пароля
     /// </summary>
     [HttpGet("[action]")]
-    public async Task<IActionResult> SendLink([FromQuery] string email, CancellationToken ct)
+    public async Task<IActionResult> Email([FromQuery] string email, CancellationToken ct)
     {
-        await resetPasswordByEmailService.SendLink(email, ct);
+        await resetPasswordByEmailService.SendToken(email, ct);
         return Ok();
     }
 
     [HttpPost("[action]")]
-    public async Task<IActionResult> Validate([FromBody] ResetPasswordByEmailRequest byEmailRequest,
+    public async Task<IActionResult> Validate([FromBody] ResetPasswordByEmailRequest request,
         CancellationToken ct)
     {
-        await resetPasswordByEmailService.ResetPassword(byEmailRequest.EmailId,
-            byEmailRequest.Password, ct);
+        var jwtToken = await resetPasswordByEmailService.ValidateToken(request.Email,
+            request.Token, ct);
+
+        Response.Cookies.Append(_jwtOptions.ResetPasswordCookieName, jwtToken, new CookieOptions
+        {
+            IsEssential = true,
+            Secure = true,
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict,
+            MaxAge = TimeSpan.FromMinutes(_jwtOptions.ResetPasswordTokenExpirationMinutes)
+        });
+
         return Ok();
     }
 }

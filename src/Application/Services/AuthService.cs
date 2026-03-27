@@ -54,8 +54,7 @@ namespace Application.Services
             var user = await context.Users.FirstOrDefaultAsync(u => (u.Login == login)
                                                                     || (u.Email == login), ct);
 
-            if (user == null)
-                throw new NotFoundException("Неверный логин или пароль");
+            if (user == null) throw new NotFoundException("Неверный логин или пароль");
 
             if (!passwordHasher.Verify(password, user.PasswordHash))
                 throw new BadRequestException("Неверный пароль");
@@ -93,8 +92,7 @@ namespace Application.Services
         {
             var session = await context.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
-            if (session == null)
-                throw new NotFoundException("Такой сесиии не существует");
+            if (session == null) throw new NotFoundException("Такой сесиии не существует");
 
             session.IsActive = false;
             session.LastActivity = DateTime.UtcNow;

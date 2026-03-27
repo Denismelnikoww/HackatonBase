@@ -1,9 +1,10 @@
-﻿namespace Infrastructure.Options
+﻿namespace Infrastructure.Options;
+
+public class VerificationOptions
 {
-    public class VerificationOptions
-    {
-        public int EmailExpirationMinutes { get; set; } = 30;
-        public string ConfirmEmailLink { get; set; }
-        public string ResetPasswordLink { get; set; }
-    }
+    public int EmailTokenExpirationMinutes { get; set; } = 30;
+    public int EmailTokenLength { get; set; } = 4;
+
+    public int PasswordTokenExpirationMinutes { get; set; } = 30;
+    public int PasswordTokenLength { get; set; } = 4;
 }

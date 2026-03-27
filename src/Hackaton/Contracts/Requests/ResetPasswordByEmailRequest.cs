@@ -5,10 +5,10 @@ namespace API.Contracts.Requests
     public class ResetPasswordByEmailRequest
     {
         [Required]
-        public string EmailId { get; set; }
+        [EmailAddress]
+        public string Email { get; set; }
 
         [Required]
-        [MinLength(8, ErrorMessage = "Пароль должен быть не короче 8 символов")]
-        public string Password { get; set; }
+        public string Token { get; set; }
     }
 }

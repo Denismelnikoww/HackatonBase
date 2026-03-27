@@ -7,80 +7,119 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Infrastructure.Auth
+namespace Infrastructure.Auth;
+
+public class JwtProvider : IJwtProvider
 {
-    public class JwtProvider : IJwtProvider
+    private readonly JwtOptions _options;
+    public JwtProvider(IOptions<JwtOptions> options)
     {
-        private readonly JwtOptions _options;
-        public JwtProvider(IOptions<JwtOptions> options)
+        _options = options.Value;
+    }
+
+    public string GenerateAccessToken(Guid userId, Guid sessionId, Role role)
+    {
+        Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
+            new Claim(_options.SessionCookieName, sessionId.ToString()),
+            new Claim(ClaimTypes.Role, role.ToString())];
+
+        var signingCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            expires: DateTime.Now.AddMinutes(_options.AccessTokenExpirationMinutes),
+            signingCredentials: signingCredentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public string GenerateRefreshToken(Guid userId, Guid sessionId)
+    {
+        Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
+            new Claim(_options.SessionCookieName,sessionId.ToString())];
+
+        var signingCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            expires: DateTime.Now.AddDays(_options.RefreshTokenExpirationDays),
+            signingCredentials: signingCredentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public ClaimsPrincipal? ValidateRefreshToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_options.Secret);
+
+        var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
         {
-            _options = options.Value;
-        }
+            ValidateIssuer = true,
+            ValidIssuer = _options.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _options.Audience,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.Zero
+        }, out _);
 
-        public string GenerateAccessToken(Guid userId, Guid sessionId, Role role)
+        if (!principal.HasClaim(c => c.Type == _options.UserIdCookieName) ||
+            !principal.HasClaim(c => c.Type == _options.SessionCookieName))
+            return null;
+
+        return principal;
+    }
+
+    public string GeneratePasswordResetToken(string email)
+    {
+        Claim[] claims = [
+            new Claim(_options.EmailCookieName, email),
+            new Claim("target","password_reset")
+        ];
+
+        var signingCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            expires: DateTime.Now.AddMinutes(5),
+            signingCredentials: signingCredentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public ClaimsPrincipal? ValidatePasswordResetToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_options.Secret);
+
+        var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
         {
-            Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
-                new Claim(_options.SessionCookieName, sessionId.ToString()),
-                new Claim(ClaimTypes.Role, role.ToString())];
+            ValidateIssuer = true,
+            ValidIssuer = _options.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _options.Audience,
+            ValidateLifetime = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.Zero
+        }, out var validatedToken);
 
-            var signingCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
-                SecurityAlgorithms.HmacSha256);
+        var purposeClaim = principal.FindFirst("target");
+        if (purposeClaim?.Value != "password_reset")
+            return null;
 
-            var token = new JwtSecurityToken(
-                claims: claims,
-                issuer: _options.Issuer,
-                audience: _options.Audience,
-                expires: DateTime.Now.AddMinutes(_options.AccessTokenExpirationMinutes),
-                signingCredentials: signingCredentials);
-
-            var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return tokenValue;
-        }
-
-        public string GenerateRefreshToken(Guid userId, Guid sessionId)
-        {
-            Claim[] claims = [new Claim(_options.UserIdCookieName, userId.ToString()),
-                new Claim(_options.SessionCookieName,sessionId.ToString())];
-
-            var signingCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Secret)),
-                SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                issuer: _options.Issuer,
-                audience: _options.Audience,
-                expires: DateTime.Now.AddDays(_options.RefreshTokenExpirationDays),
-                signingCredentials: signingCredentials);
-
-            var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return tokenValue;
-        }
-
-        public ClaimsPrincipal? ValidateRefreshToken(string token)
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_options.Secret);
-
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = _options.Issuer,
-                ValidateAudience = true,
-                ValidAudience = _options.Audience,
-                ValidateLifetime = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero
-            }, out _);
-
-            if (!principal.HasClaim(c => c.Type == _options.UserIdCookieName) ||
-                !principal.HasClaim(c => c.Type == _options.SessionCookieName))
-                return null;
-
-            return principal;
-        }
+        return principal;
     }
 }

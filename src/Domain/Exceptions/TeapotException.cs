@@ -1,7 +1,6 @@
-﻿namespace Domain.Exceptions
+﻿namespace Domain.Exceptions;
+
+public class TeapotException : Exception
 {
-    public class TeapotException : Exception
-    {
-        public TeapotException(string message) : base(message) { }
-    }
+    public TeapotException(string message) : base(message) { }
 }

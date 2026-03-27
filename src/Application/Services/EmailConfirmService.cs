@@ -12,37 +12,13 @@ namespace Application.Services
         IRedisCacheService redisCacheService,
         IOptions<VerificationOptions> options,
         IEmailTemplateBuilder emailTemplateBuilder,
-        IPasswordHasher passwordHasher,
+        IVerificationTokenProvider tokenProvider,
         IEmailService emailService,
         AppDbContext context) : IEmailConfirmService
     {
         private readonly VerificationOptions _options = options.Value;
 
-        public async Task SendLink(string email, CancellationToken ct)
-        {
-            var user = await context.Users.AsNoTracking()
-                .Where(u => u.Email == email)
-                .Select(u => new
-                {
-                    IsEmailConfirmed = u.IsEmailConfirmed
-                })
-                .FirstOrDefaultAsync();
-
-            if (user == null) throw new NotFoundException("Такого пользователя не существует");
-            if (user.IsEmailConfirmed) throw new ConflictException("Почта данного пользователя уже подтверждена");
-
-            var emailId = Guid.NewGuid().ToString();
-            var link = $"https://{_options.ConfirmEmailLink}?emailId={emailId}";
-
-            await redisCacheService.SetAsync(emailId, email,
-                TimeSpan.FromMinutes(_options.EmailExpirationMinutes));
-
-            var html = emailTemplateBuilder.BuildEmailConfirmation(link, _options.EmailExpirationMinutes);
-
-            await emailService.SendAsync(email, "Подтверждение почты", html, ct);
-        }
-
-        public async Task SendLink(Guid userId, CancellationToken ct)
+        public async Task SendToken(Guid userId, CancellationToken ct)
         {
             var user = await context.Users.AsNoTracking()
                 .Where(u => u.Id == userId)
@@ -57,28 +33,32 @@ namespace Application.Services
             if (string.IsNullOrWhiteSpace(user.Email)) throw new BadRequestException("Укажите почту прежде чем ее подтверждать");
             if (user.IsEmailConfirmed) throw new ConflictException("Почта данного пользователя уже подтверждена");
 
-            var emailId = Guid.NewGuid().ToString();
-            var link = $"https://{emailId}";
+            var token = tokenProvider.GenerateResetToken();
+            await redisCacheService.SetAsync(user.Email, token);
 
-            await redisCacheService.SetAsync(emailId, user.Email,
-                TimeSpan.FromMinutes(_options.EmailExpirationMinutes));
-
-            var html = emailTemplateBuilder.BuildEmailConfirmation(link, _options.EmailExpirationMinutes);
+            var html = emailTemplateBuilder.BuildEmailConfirmation(token, _options.EmailTokenExpirationMinutes);
 
             await emailService.SendAsync(user.Email, "Подтверждение почты", html, ct);
         }
 
-        public async Task ConfirmEmail(string emailId, CancellationToken ct)
+        public async Task ConfirmEmail(Guid userId, string inputToken, CancellationToken ct)
         {
-            var email = await redisCacheService.GetAsync<string>(emailId);
 
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await context.Users
+             .Where(u => u.Id == userId)
+             .FirstOrDefaultAsync();
 
             if (user == null) throw new NotFoundException("Такого пользователя не существует");
+            if (string.IsNullOrWhiteSpace(user.Email)) throw new BadRequestException("Укажите почту прежде чем ее подтверждать");
+            if (user.IsEmailConfirmed) throw new ConflictException("Почта данного пользователя уже подтверждена");
 
-            user.ConfirmEmail();
+            var token = await redisCacheService.GetAsync<string>(user.Email);
 
-            await context.SaveChangesAsync();
+            if (string.Equals(token, inputToken))
+            {
+                user.ConfirmEmail();
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

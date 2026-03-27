@@ -17,7 +17,15 @@ public class ResetPasswordService(
             throw new BadRequestException("Страрый пароль не совпадает с введенным");
 
         user.PasswordHash = passwordHasher.Hash(newPassword);
+        await context.SaveChangesAsync();
+    }
 
+    public async Task ResetPassword(string email, string newPassword, CancellationToken ct)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email, ct);
+        if (user == null) throw new NotFoundException("Такого пользователя не существует");
+
+        user.PasswordHash = passwordHasher.Hash(newPassword);
         await context.SaveChangesAsync();
     }
 }

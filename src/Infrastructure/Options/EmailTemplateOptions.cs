@@ -1,8 +1,7 @@
-﻿namespace Infrastructure.Options
+﻿namespace Infrastructure.Options;
+
+public class EmailTemplateOptions
 {
-    public class EmailTemplateOptions
-    {
-        public string ResourcesPath { get; set; }
-        public string EmailTemplateWithButtonFileName { get; set; }
-    }
+    public string ResourcesPath { get; set; }
+    public string EmailTemplateWithCodeFileName { get; set; }
 }
